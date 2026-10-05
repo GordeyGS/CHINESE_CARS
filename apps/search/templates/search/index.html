@@ -1,0 +1,93 @@
+{% load static %}
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Поиск — Китайский автопром</title>
+    <link rel="stylesheet" href="{% static 'search/search.css' %}">
+</head>
+<body>
+    <main class="page-shell">
+        <header class="hero">
+            <p class="eyebrow">База знаний</p>
+            <h1>Поиск по китайскому автопрому</h1>
+            <p class="intro">Введите слово, словосочетание или вопрос. Результаты из базы знаний дополняются отдельной интернет-выдачей.</p>
+            <form class="search-form" action="{% url 'search:index' %}" method="get" role="search">
+                <label for="search-query">Поисковый запрос</label>
+                <div class="search-row">
+                    <input id="search-query" name="q" type="search" value="{{ query }}" maxlength="300"
+                           placeholder="Например: Blade Battery" required autofocus>
+                    <button type="submit">Найти</button>
+                </div>
+            </form>
+        </header>
+
+        {% if error %}
+            <div class="notice error" role="alert">{{ error }}</div>
+        {% elif submitted %}
+            <section class="summary" aria-labelledby="summary-title">
+                <h2 id="summary-title">Результаты для «{{ original_query }}»</h2>
+                <p>Найдено: <strong>{{ total }}</strong>. Тип запроса: <span class="query-type">{{ query_type }}</span>.</p>
+                {% if show_scores and terms %}<p class="debug">Значимые термины: {{ terms|join:", " }}</p>{% endif %}
+            </section>
+
+            {% if total %}
+                {% for section in group_sections %}
+                    {% if section.results %}
+                        <section class="result-group" aria-labelledby="group-{{ section.key|lower }}">
+                            <div class="group-heading">
+                                <h2 id="group-{{ section.key|lower }}">{{ section.label }}</h2>
+                                <span>{{ section.results|length }}</span>
+                            </div>
+                            <div class="result-list">
+                                {% for result in section.results %}
+                                    <article class="result-card">
+                                        <div class="result-meta">
+                                            <span class="result-type">{{ result.result_type }}</span>
+                                            {% if show_scores %}<span class="score">score {{ result.score|floatformat:4 }}</span>{% endif %}
+                                        </div>
+                                        <h3>
+                                            {% if result.url %}<a href="{{ result.url }}" rel="noopener noreferrer">{{ result.title }}</a>
+                                            {% else %}{{ result.title }}{% endif %}
+                                        </h3>
+                                        <p>{{ result.description }}</p>
+                                    </article>
+                                {% endfor %}
+                            </div>
+                        </section>
+                    {% endif %}
+                {% endfor %}
+            {% else %}
+                <div class="notice">Ничего не найдено. Проверьте написание или попробуйте более короткий запрос.</div>
+            {% endif %}
+
+            {% if external_results %}
+                <section class="result-group external-group" aria-labelledby="group-external">
+                    <div class="group-heading">
+                        <h2 id="group-external">Результаты из Интернета</h2>
+                        <span>{{ external_results|length }}</span>
+                    </div>
+                    <p class="external-note">Внешние ссылки не являются материалами собственной базы знаний.</p>
+                    <div class="result-list">
+                        {% for result in external_results %}
+                            <article class="result-card external-card">
+                                <div class="result-meta">
+                                    <span class="result-type">External result</span>
+                                    <span>{{ result.source }}</span>
+                                </div>
+                                <h3>{{ result.title }}</h3>
+                                <p>{{ result.description }}</p>
+                                <a class="external-link" href="{{ result.url }}" target="_blank"
+                                   rel="noopener noreferrer nofollow">Открыть</a>
+                            </article>
+                        {% endfor %}
+                    </div>
+                </section>
+            {% elif external_message %}
+                <div class="notice external-notice">{{ external_message }}</div>
+            {% endif %}
+        {% endif %}
+    </main>
+</body>
+</html>

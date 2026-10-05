@@ -30,6 +30,8 @@ class Command(BaseCommand):
         byd_group, _ = Manufacturer.objects.get_or_create(
             name="BYD Company", defaults={"slug": "byd-company", "country": china, "founded_year": 1995}
         )
+        byd_group.description = "Китайский производитель электромобилей BYD и тяговых батарей."
+        byd_group.save(update_fields=["description"])
         geely_group, _ = Manufacturer.objects.get_or_create(
             name="Geely Holding", defaults={"slug": "geely-holding", "country": china, "founded_year": 1986}
         )
@@ -38,19 +40,27 @@ class Command(BaseCommand):
             name="BYD",
             defaults={"slug": "byd", "origin_country": china, "founded_year": 2003},
         )
+        byd.description = "Марка электромобилей BYD, использующая технологию Blade Battery."
+        byd.save(update_fields=["description"])
         zeekr, _ = Brand.objects.get_or_create(
             manufacturer=geely_group,
             name="Zeekr",
             defaults={"slug": "zeekr", "origin_country": china, "founded_year": 2021},
         )
+        zeekr.description = "Китайская премиальная марка электромобилей Zeekr."
+        zeekr.save(update_fields=["description"])
         blade, _ = Technology.objects.get_or_create(
             name="Blade Battery",
             defaults={"slug": "blade-battery", "category": "battery", "description": "BYD LFP battery technology."},
         )
+        blade.description = "Тяговая LFP-батарея Blade Battery компании BYD для электромобилей."
+        blade.save(update_fields=["description"])
         sea, _ = Technology.objects.get_or_create(
             name="SEA Architecture",
             defaults={"slug": "sea-architecture", "category": "platform", "description": "Geely electric vehicle architecture."},
         )
+        sea.description = "Платформа SEA для электромобилей Geely и модели Zeekr 001."
+        sea.save(update_fields=["description"])
         byd_platform, _ = Platform.objects.get_or_create(
             manufacturer=byd_group, name="e-Platform 3.0", defaults={"slug": "e-platform-3"}
         )
@@ -91,6 +101,10 @@ class Command(BaseCommand):
         PowertrainMotor.objects.get_or_create(powertrain=zeekr_pt, electric_motor=zeekr_rear, axle="rear")
         seal, _ = Model.objects.get_or_create(brand=byd, name="Seal", defaults={"slug": "byd-seal", "segment": "D"})
         zeekr_001, _ = Model.objects.get_or_create(brand=zeekr, name="001", defaults={"slug": "zeekr-001", "segment": "E"})
+        seal.description = "Электромобиль BYD Seal использует тяговую батарею Blade Battery."
+        seal.save(update_fields=["description"])
+        zeekr_001.description = "Электромобиль Zeekr 001 построен на архитектуре SEA и доступен с полным приводом."
+        zeekr_001.save(update_fields=["description"])
         ModelTechnology.objects.get_or_create(model=seal, technology=blade, defaults={"note": "Traction battery technology."})
         ModelTechnology.objects.get_or_create(model=zeekr_001, technology=sea)
         seal_gen, _ = Generation.objects.get_or_create(
@@ -108,11 +122,15 @@ class Command(BaseCommand):
             name="Long Range RWD",
             defaults={"slug": "byd-seal-long-range-rwd", "powertrain": byd_pt, "range_km": 570, "range_cycle": "WLTP"},
         )
+        seal_mod.source_note = "Электромобиль BYD с технологией Blade Battery и задним приводом."
+        seal_mod.save(update_fields=["source_note"])
         zeekr_mod, _ = Modification.objects.get_or_create(
             generation=zeekr_gen,
             name="AWD 100 kWh",
             defaults={"slug": "zeekr-001-awd-100", "powertrain": zeekr_pt, "range_km": 580, "range_cycle": "WLTP"},
         )
+        zeekr_mod.source_note = "Полноприводный электромобиль Zeekr 001 на платформе SEA."
+        zeekr_mod.save(update_fields=["source_note"])
 
         user, created = get_user_model().objects.get_or_create(username="demo_editor", defaults={"email": "demo@example.com"})
         if created:
@@ -138,6 +156,12 @@ class Command(BaseCommand):
                 "published_at": timezone.now(),
             },
         )
+        blade_article.title = "Blade Battery в электромобилях BYD"
+        blade_article.summary = "Как тяговая батарея Blade Battery применяется в электромобилях BYD."
+        blade_article.body = "Blade Battery — LFP-технология BYD. Электромобиль BYD Seal использует эту тяговую батарею."
+        blade_article.status = Article.Status.PUBLISHED
+        blade_article.published_at = blade_article.published_at or timezone.now()
+        blade_article.save(update_fields=["title", "summary", "body", "status", "published_at"])
         blade_article.tags.add(ev_tag)
         blade_article.sources.add(byd_source)
         blade_article.vehicle_models.add(seal)
@@ -154,6 +178,11 @@ class Command(BaseCommand):
                 "published_at": timezone.now(),
             },
         )
+        sea_article.summary = "Электромобиль Zeekr 001 и модульная платформа SEA."
+        sea_article.body = "Zeekr 001 — китайский электромобиль на платформе SEA с полным приводом."
+        sea_article.status = Article.Status.PUBLISHED
+        sea_article.published_at = sea_article.published_at or timezone.now()
+        sea_article.save(update_fields=["summary", "body", "status", "published_at"])
         sea_article.sources.add(zeekr_source)
         sea_article.vehicle_models.add(zeekr_001)
         sea_article.technologies.add(sea)
@@ -166,6 +195,10 @@ class Command(BaseCommand):
                 "published_at": timezone.now(),
             },
         )
+        video.title = "BYD Blade Battery и Zeekr 001 — обзор электромобилей"
+        video.description = "Видео о Blade Battery в электромобилях BYD и платформе SEA модели Zeekr 001."
+        video.is_active = True
+        video.save(update_fields=["title", "description", "is_active"])
         video.articles.add(blade_article, sea_article)
         video.vehicle_models.add(seal, zeekr_001)
         video.technologies.add(blade, sea)

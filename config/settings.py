@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.postgres',
     'apps.core',
     'apps.users',
     'apps.cars',
@@ -134,3 +135,25 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'users.User'
+
+# The migration that creates FTS expression indexes uses the same configuration.
+# Changing this value requires a matching index migration.
+SEARCH_FTS_CONFIG = os.environ.get('SEARCH_FTS_CONFIG', 'russian')
+
+EXTERNAL_SEARCH_PROVIDER = os.environ.get('EXTERNAL_SEARCH_PROVIDER', '')
+EXTERNAL_SEARCH_API_KEY = os.environ.get('EXTERNAL_SEARCH_API_KEY', '')
+_external_search_default_endpoint = (
+    'https://api.tavily.com/search'
+    if EXTERNAL_SEARCH_PROVIDER.strip().casefold() == 'tavily'
+    else 'https://api.search.brave.com/res/v1/web/search'
+)
+EXTERNAL_SEARCH_ENDPOINT = os.environ.get(
+    'EXTERNAL_SEARCH_ENDPOINT',
+    _external_search_default_endpoint,
+)
+EXTERNAL_SEARCH_TIMEOUT_SECONDS = min(
+    max(float(os.environ.get('EXTERNAL_SEARCH_TIMEOUT_SECONDS', '3')), 0.5),
+    10.0,
+)
+EXTERNAL_SEARCH_LIMIT = min(max(int(os.environ.get('EXTERNAL_SEARCH_LIMIT', '5')), 1), 10)
+EXTERNAL_SEARCH_LANGUAGE = os.environ.get('EXTERNAL_SEARCH_LANGUAGE', 'ru')
