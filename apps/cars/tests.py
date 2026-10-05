@@ -3,8 +3,9 @@ from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 
 from .models import (
-    Battery, BodyType, Brand, Country, DriveType, Generation, Manufacturer,
+    Battery, BodyType, Brand, Country, DriveType, ElectricMotor, Generation, Manufacturer,
     Model, ModelTechnology, Modification, Platform, Powertrain, Technology,
+    PowertrainMotor,
 )
 
 
@@ -71,6 +72,16 @@ def test_powertrain_component_validation(vehicle_data):
     invalid = Powertrain(type=Powertrain.Type.BEV, drive_type=vehicle_data["drive"])
     with pytest.raises(ValidationError):
         invalid.full_clean()
+
+
+@pytest.mark.django_db
+def test_electrified_powertrain_requires_motor(vehicle_data):
+    powertrain = vehicle_data["powertrain"]
+    with pytest.raises(ValidationError):
+        powertrain.validate_motor_configuration()
+    motor = ElectricMotor.objects.create(manufacturer=vehicle_data["manufacturer"], code="MOTOR-1")
+    PowertrainMotor.objects.create(powertrain=powertrain, electric_motor=motor, axle="rear")
+    powertrain.validate_motor_configuration()
 
 
 @pytest.mark.django_db

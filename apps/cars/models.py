@@ -181,7 +181,11 @@ class CombustionEngine(SourcedModel):
     torque_nm = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
 
     class Meta:
-        constraints = [models.UniqueConstraint(fields=["manufacturer", "code"], name="uq_engine_mfr_code")]
+        constraints = [
+            models.UniqueConstraint(fields=["manufacturer", "code"], name="uq_engine_mfr_code"),
+            models.CheckConstraint(condition=models.Q(power_kw__isnull=True) | models.Q(power_kw__gte=0), name="ck_engine_power_nonnegative"),
+            models.CheckConstraint(condition=models.Q(torque_nm__isnull=True) | models.Q(torque_nm__gte=0), name="ck_engine_torque_nonnegative"),
+        ]
 
     def __str__(self):
         return self.code
@@ -195,7 +199,11 @@ class ElectricMotor(SourcedModel):
     torque_nm = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
 
     class Meta:
-        constraints = [models.UniqueConstraint(fields=["manufacturer", "code"], name="uq_motor_mfr_code")]
+        constraints = [
+            models.UniqueConstraint(fields=["manufacturer", "code"], name="uq_motor_mfr_code"),
+            models.CheckConstraint(condition=models.Q(power_kw__isnull=True) | models.Q(power_kw__gte=0), name="ck_motor_power_nonnegative"),
+            models.CheckConstraint(condition=models.Q(torque_nm__isnull=True) | models.Q(torque_nm__gte=0), name="ck_motor_torque_nonnegative"),
+        ]
 
     def __str__(self):
         return self.code
@@ -219,6 +227,8 @@ class Battery(SourcedModel):
                 | models.Q(usable_capacity_kwh__lte=models.F("gross_capacity_kwh")),
                 name="ck_battery_usable_lte_gross",
             ),
+            models.CheckConstraint(condition=models.Q(gross_capacity_kwh__isnull=True) | models.Q(gross_capacity_kwh__gte=0), name="ck_battery_gross_nonnegative"),
+            models.CheckConstraint(condition=models.Q(usable_capacity_kwh__isnull=True) | models.Q(usable_capacity_kwh__gte=0), name="ck_battery_usable_nonnegative"),
         ]
 
     def __str__(self):
@@ -273,7 +283,9 @@ class Powertrain(SourcedModel):
                 | models.Q(type="BEV", combustion_engine__isnull=True, battery__isnull=False)
                 | models.Q(type__in=["HEV", "PHEV", "EREV"], combustion_engine__isnull=False, battery__isnull=False),
                 name="ck_powertrain_component_set",
-            )
+            ),
+            models.CheckConstraint(condition=models.Q(system_power_kw__isnull=True) | models.Q(system_power_kw__gte=0), name="ck_powertrain_power_nonnegative"),
+            models.CheckConstraint(condition=models.Q(system_torque_nm__isnull=True) | models.Q(system_torque_nm__gte=0), name="ck_powertrain_torque_nonnegative"),
         ]
 
     def clean(self):
@@ -291,6 +303,13 @@ class Powertrain(SourcedModel):
     def __str__(self):
         return f"{self.type} {self.drive_type.code} {self.system_power_kw or ''}".strip()
 
+    def validate_motor_configuration(self):
+        motor_count = sum(link.quantity for link in self.motor_links.all())
+        if self.type == self.Type.ICE and motor_count:
+            raise ValidationError("ICE powertrains cannot contain traction electric motors.")
+        if self.type != self.Type.ICE and motor_count == 0:
+            raise ValidationError("Electrified powertrains require at least one electric motor.")
+
 
 class PowertrainMotor(TimeStampedModel):
     class Axle(models.TextChoices):
@@ -305,6 +324,11 @@ class PowertrainMotor(TimeStampedModel):
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=["powertrain", "electric_motor", "axle"], name="uq_powertrain_motor_axle")]
+
+    def clean(self):
+        super().clean()
+        if self.powertrain_id and self.powertrain.type == Powertrain.Type.ICE:
+            raise ValidationError("ICE powertrains cannot contain traction electric motors.")
 
 
 class Modification(SourcedModel):
@@ -330,7 +354,12 @@ class Modification(SourcedModel):
 
     class Meta:
         ordering = ["generation", "name"]
-        constraints = [models.UniqueConstraint(fields=["generation", "name"], name="uq_mod_generation_name")]
+        constraints = [
+            models.UniqueConstraint(fields=["generation", "name"], name="uq_mod_generation_name"),
+            models.CheckConstraint(condition=models.Q(acceleration_0_100_s__isnull=True) | models.Q(acceleration_0_100_s__gte=0), name="ck_mod_acceleration_nonnegative"),
+            models.CheckConstraint(condition=models.Q(fuel_consumption_l_100km__isnull=True) | models.Q(fuel_consumption_l_100km__gte=0), name="ck_mod_fuel_consumption_nonnegative"),
+            models.CheckConstraint(condition=models.Q(energy_consumption_kwh_100km__isnull=True) | models.Q(energy_consumption_kwh_100km__gte=0), name="ck_mod_energy_consumption_nonnegative"),
+        ]
         indexes = [models.Index(fields=["generation", "is_active"], name="idx_mod_generation_active")]
 
     def __str__(self):
@@ -380,6 +409,7 @@ class TrimLevel(TimeStampedModel):
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=["modification_market", "name"], name="uq_trim_offer_name"),
+            models.CheckConstraint(condition=models.Q(price_amount__isnull=True) | models.Q(price_amount__gte=0), name="ck_trim_price_nonnegative"),
             models.CheckConstraint(
                 condition=models.Q(valid_to__isnull=True) | models.Q(valid_from__isnull=True) | models.Q(valid_to__gte=models.F("valid_from")),
                 name="ck_trim_date_order",

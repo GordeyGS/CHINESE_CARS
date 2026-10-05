@@ -23,6 +23,7 @@ class RecommendationRule(models.Model):
 
     class Meta:
         ordering = ["priority", "name"]
+        constraints = [models.CheckConstraint(condition=models.Q(weight__gte=0), name="ck_rule_weight_nonnegative")]
 
     def __str__(self):
         return self.name
