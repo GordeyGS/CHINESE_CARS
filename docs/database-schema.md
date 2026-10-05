@@ -14,7 +14,7 @@
 - используемые справочники защищаются от случайного удаления;
 - M:N-связи с собственными атрибутами имеют явную промежуточную таблицу.
 
-Для основных редактируемых предметных сущностей предусматриваются необязательные поля `source_url` и `source_note`. Это простой механизм фиксации происхождения данных первой версии; общий реестр источников и привязка одного факта к нескольким источникам отложены до появления такого требования.
+Для основных редактируемых предметных сущностей предусматриваются необязательные поля `source_url` и `source_note`. Статьи используют отдельный реестр `source`; привязка отдельных структурированных фактов к нескольким источникам отложена до появления такого требования.
 
 ## 2. Основные таблицы
 
@@ -75,8 +75,10 @@
 |---|---|---|
 | `article_category` | `name`, `slug`, `description` | одна основная категория статьи |
 | `tag` | `name`, `slug` | уникальные имя и slug |
+| `source` | `name`, `publisher`, `url`, `accessed_at`, `notes`, `is_active`, timestamps | уникальный URL источника |
 | `article` | `category_id`, `author_id`, `title`, `slug`, `summary`, `body`, `status`, `published_at`, timestamps | статус `draft`/`published`/`archived` |
 | `article_tag` | `article_id`, `tag_id` | M:N |
+| `article_source` | `article_id`, `source_id` | M:N между статьями и подтверждающими источниками |
 | `article_manufacturer` | `article_id`, `manufacturer_id` | связь с производителями/концернами |
 | `article_brand` | `article_id`, `brand_id` | связь с марками |
 | `article_model` | `article_id`, `model_id` | связь с моделями |
@@ -163,6 +165,8 @@ erDiagram
     ARTICLE_CATEGORY ||--o{ ARTICLE : classifies
     ARTICLE ||--o{ ARTICLE_TAG : tagged
     TAG ||--o{ ARTICLE_TAG : marks
+    ARTICLE ||--o{ ARTICLE_SOURCE : cites
+    SOURCE ||--o{ ARTICLE_SOURCE : supports
     ARTICLE ||--o{ ARTICLE_MODEL : discusses
     VEHICLE_MODEL ||--o{ ARTICLE_MODEL : documented_by
     ARTICLE ||--o{ ARTICLE_TECHNOLOGY : explains
