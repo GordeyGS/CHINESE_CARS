@@ -5,7 +5,7 @@ from django.urls import reverse
 from apps.cars.models import Technology
 from apps.knowledge.models import Article, VideoResource
 
-from .services import InternalSearchService, QueryParser, QueryType, QueryValidationError
+from .services import InternalSearchService, QueryParser, QueryType, QueryValidationError, SearchAssistanceService
 
 
 pytestmark = pytest.mark.django_db
@@ -132,3 +132,80 @@ def test_search_page_handles_empty_and_successful_queries(client):
     assert "Результаты для «Zeekr 001»" in content
     assert "Автомобили" in content
     assert "Zeekr 001" in content
+
+
+def test_internal_search_results_link_to_detail_pages(client):
+    response = client.get(reverse("search:index"), {"q": "Blade Battery"})
+    content = response.content.decode()
+    assert reverse("knowledge:article-detail", args=["blade-battery-overview"]) in content
+    assert reverse("cars:technology-detail", args=["blade-battery"]) in content
+
+    cars = client.get(reverse("search:index"), {"q": "Zeekr 001"}).content.decode()
+    assert reverse("cars:model-detail", args=["zeekr-001"]) in cars
+
+
+@pytest.mark.parametrize(
+    ("query", "expected"),
+    [("BY", "BYD"), ("zee", "Zeekr"), ("zee", "Zeekr 001"), ("blade", "Blade Battery")],
+)
+def test_autocomplete_returns_local_entities(query, expected):
+    labels = [item.label for item in SearchAssistanceService().autocomplete(query)]
+    assert expected in labels
+
+
+def test_short_autocomplete_query_does_not_touch_database(django_assert_num_queries):
+    with django_assert_num_queries(0):
+        assert SearchAssistanceService().autocomplete("B") == []
+
+
+def test_autocomplete_limit_is_enforced():
+    for index in range(10):
+        Technology.objects.create(name=f"Blade demo {index}", slug=f"blade-demo-{index}")
+    assert len(SearchAssistanceService(limit=5).autocomplete("Blade")) == 5
+
+
+@pytest.mark.parametrize(
+    ("query", "expected"),
+    [("Zeek 001", "Zeekr 001"), ("Balde Battery", "Blade Battery")],
+)
+def test_fuzzy_assistance_suggests_typo_correction(query, expected):
+    labels = [item.label for item in SearchAssistanceService().fuzzy(query)]
+    assert expected in labels
+
+
+def test_typo_search_page_offers_correction(client):
+    content = client.get(reverse("search:index"), {"q": "Zeek 001"}).content.decode()
+    assert "Возможно, вы имели в виду" in content
+    assert "Zeekr 001" in content
+
+
+def test_empty_search_page_shows_examples(client):
+    content = client.get(reverse("search:index")).content.decode()
+    assert "Примеры запросов" in content
+    assert "Blade Battery" in content
+
+
+def test_no_results_page_shows_help(client):
+    content = client.get(reverse("search:index"), {"q": "xqznonexistentterm"}).content.decode()
+    assert "По запросу ничего не найдено" in content
+    assert "Популярные запросы" in content
+
+
+def test_suggestion_endpoint_returns_limited_json(client):
+    response = client.get(reverse("search:suggest"), {"q": "zee"})
+    assert response.status_code == 200
+    assert response["Content-Type"].startswith("application/json")
+    payload = response.json()
+    assert len(payload["suggestions"]) <= 7
+    assert {"label": "Zeekr 001", "type": "model", "value": "Zeekr 001"} in payload["suggestions"]
+
+
+def test_autocomplete_does_not_invoke_tavily(client, monkeypatch):
+    class ForbiddenCoordinator:
+        def __init__(self):
+            raise AssertionError("Autocomplete must not construct the search coordinator")
+
+    monkeypatch.setattr("apps.search.views.SearchCoordinator", ForbiddenCoordinator)
+    response = client.get(reverse("search:suggest"), {"q": "BY"})
+    assert response.status_code == 200
+    assert response.json()["suggestions"]

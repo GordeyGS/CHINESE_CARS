@@ -4,6 +4,7 @@ from django.conf import settings
 from django.contrib.postgres.search import SearchVector
 from django.db.models import Value
 from django.db.models.functions import Concat
+from django.urls import reverse
 
 from apps.cars.models import (
     Brand,
@@ -95,8 +96,15 @@ class InternalSearchService:
         return results
 
     @staticmethod
-    def _draft_result(*, result_type, title, description, object_id, source):
-        return SearchResult(result_type, title, description, "", 0.0, object_id, source)
+    def _draft_result(*, result_type, title, description, object_id, source, url=""):
+        return SearchResult(result_type, title, description, url, 0.0, object_id, source)
+
+    @staticmethod
+    def _technology_url(item):
+        if isinstance(item, Technology):
+            return reverse("cars:technology-detail", args=[item.slug])
+        prefix = "platform" if isinstance(item, Platform) else "adas"
+        return reverse("cars:technology-list") + f"#{prefix}-{item.slug}"
 
     def _articles(self, parsed):
         results = self._ranked_results(
@@ -111,6 +119,7 @@ class InternalSearchService:
                     description=_snippet(item.summary or item.body, "Статья базы знаний"),
                     object_id=item.pk,
                     source=f"knowledge.Article:{item.pk}",
+                    url=reverse("knowledge:article-detail", args=[item.slug]),
                 ),
                 " ".join((item.title, item.summary, item.body)),
             ),
@@ -131,6 +140,7 @@ class InternalSearchService:
                     description=_snippet(item.description, "Производитель автомобилей"),
                     object_id=item.pk,
                     source=f"cars.Manufacturer:{item.pk}",
+                    url=reverse("cars:brand-list") + f"?manufacturer={item.pk}",
                 ),
                 f"{item.name} {item.description}",
             ),
@@ -147,6 +157,7 @@ class InternalSearchService:
                     description=_snippet(item.description, f"Марка производителя {item.manufacturer.name}"),
                     object_id=item.pk,
                     source=f"cars.Brand:{item.pk}",
+                    url=reverse("cars:brand-detail", args=[item.slug]),
                 ),
                 f"{item.name} {item.manufacturer.name} {item.description}",
             ),
@@ -167,6 +178,7 @@ class InternalSearchService:
                     description=_snippet(item.description, "Модель автомобиля"),
                     object_id=item.pk,
                     source=f"cars.Model:{item.pk}",
+                    url=reverse("cars:model-detail", args=[item.slug]),
                 ),
                 f"{item.brand.name} {item.name} {item.brand.manufacturer.name} {item.description}",
             ),
@@ -187,6 +199,7 @@ class InternalSearchService:
                     description=_snippet(item.description, f"Поколение с {item.start_year} года"),
                     object_id=item.pk,
                     source=f"cars.Generation:{item.pk}",
+                    url=reverse("cars:model-detail", args=[item.model.slug]) + f"#generation-{item.pk}",
                 ),
                 f"{item.model} {item.name} {item.code} {item.platform.name} {item.description}",
             ),
@@ -211,6 +224,7 @@ class InternalSearchService:
                     ),
                     object_id=item.pk,
                     source=f"cars.Modification:{item.pk}",
+                    url=reverse("cars:modification-detail", args=[item.slug]),
                 ),
                 f"{item.generation.model} {item.name} {item.powertrain.type} "
                 f"{item.powertrain.battery or ''} {item.source_note}",
@@ -241,6 +255,7 @@ class InternalSearchService:
                         description=_snippet(item.description, kind),
                         object_id=item.pk,
                         source=f"{item._meta.label}:{item.pk}",
+                        url=self._technology_url(item),
                     ),
                     f"{item.name} {getattr(item, 'category', '')} {item.description}",
                 ),

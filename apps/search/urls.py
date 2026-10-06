@@ -5,4 +5,7 @@ from . import views
 
 app_name = "search"
 
-urlpatterns = [path("", views.search_page, name="index")]
+urlpatterns = [
+    path("suggest/", views.suggest, name="suggest"),
+    path("", views.search_page, name="index"),
+]

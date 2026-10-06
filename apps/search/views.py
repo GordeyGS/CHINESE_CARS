@@ -1,7 +1,14 @@
 from django.conf import settings
+from django.http import JsonResponse
 from django.shortcuts import render
 
-from .services import ExternalSearchStatus, QueryValidationError, SearchCoordinator
+from .services import (
+    POPULAR_QUERIES,
+    ExternalSearchStatus,
+    QueryValidationError,
+    SearchAssistanceService,
+    SearchCoordinator,
+)
 
 
 GROUP_LABELS = {
@@ -20,6 +27,7 @@ def search_page(request):
         "show_scores": settings.DEBUG,
         "total": 0,
         "group_sections": [],
+        "popular_queries": POPULAR_QUERIES,
     }
     if "q" in request.GET:
         try:
@@ -28,6 +36,8 @@ def search_page(request):
             context["error"] = str(error)
         else:
             internal = response.internal
+            assistance = SearchAssistanceService()
+            show_similar = assistance.is_weak(internal) or not assistance.has_exact_term(raw_query)
             external_message = ""
             if response.external.status is ExternalSearchStatus.ERROR:
                 external_message = "Внешний поиск временно недоступен. Внутренние результаты показаны полностью."
@@ -50,6 +60,12 @@ def search_page(request):
                     ],
                     "external_results": response.external.results,
                     "external_message": external_message,
+                    "similar_suggestions": assistance.fuzzy(raw_query) if show_similar else [],
                 }
             )
     return render(request, "search/index.html", context)
+
+
+def suggest(request):
+    suggestions = SearchAssistanceService().autocomplete(request.GET.get("q", ""))
+    return JsonResponse({"suggestions": [item.as_dict() for item in suggestions]})

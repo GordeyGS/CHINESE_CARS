@@ -16,10 +16,12 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
-from django.views.generic import RedirectView
 
 urlpatterns = [
-    path('', RedirectView.as_view(pattern_name='search:index', permanent=False)),
+    path('', include('apps.core.urls')),
+    path('', include('apps.cars.urls')),
+    path('', include('apps.knowledge.urls')),
+    path('accounts/', include('apps.users.urls')),
     path('search/', include('apps.search.urls')),
     path('admin/', admin.site.urls),
 ]

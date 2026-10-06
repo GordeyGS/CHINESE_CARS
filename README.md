@@ -15,7 +15,9 @@ docker compose up -d db
 .venv/bin/python manage.py runserver
 ```
 
-После загрузки demo-данных внутренний поиск доступен по <http://127.0.0.1:8000/search/>. Для демонстрации подходят запросы `BYD`, `Blade Battery`, `Zeekr 001`, `электромобиль` и `Какие электромобили BYD используют Blade Battery?`.
+После загрузки demo-данных интерфейс доступен по <http://127.0.0.1:8000/>. Основные разделы: `/brands/`, `/cars/`, `/articles/`, `/technologies/` и `/search/`. Для демонстрации поиска подходят запросы `BYD`, `Blade Battery`, `Zeekr 001`, `электромобиль` и `Какие электромобили BYD используют Blade Battery?`.
+
+Поисковые поля предлагают локальный autocomplete после двух введённых символов. JSON endpoint `/search/suggest/?q=...` не вызывает Tavily. Для демонстрации исправления опечаток используйте `Zeek 001` или `Balde Battery`: система предложит близкий термин, не меняя запрос автоматически.
 
 ### Внешний поиск
 
@@ -43,6 +45,6 @@ PostgreSQL является единственной настроенной СУ
 
 ## Реализованные этапы
 
-Этап 1 включает модели данных, Django Admin, миграции, demo-команду и модельные тесты. На этапе 2 добавлены внутренний PostgreSQL Full Text Search, `pg_trgm`, поиск слова/фразы/предложения, ранжирование и минимальный адаптивный интерфейс с группами `Articles`, `Cars`, `Technologies`, `Videos`. На этапе 3 реализованы `ExternalSearchProvider`, текущий адаптер Tavily Search API, дополнительный адаптер Brave Search API, `NullExternalSearchProvider` и отдельная группа `External results`.
+Этап 1 включает модели данных, Django Admin, миграции, demo-команду и модельные тесты. На этапе 2 добавлены внутренний PostgreSQL Full Text Search, `pg_trgm`, поиск слова/фразы/предложения, ранжирование и адаптивная выдача с группами `Articles`, `Cars`, `Technologies`, `Videos`. На этапе 3 реализованы `ExternalSearchProvider`, текущий адаптер Tavily Search API, дополнительный адаптер Brave Search API, `NullExternalSearchProvider` и отдельная группа `External results`. На этапе 4 добавлены единый Bootstrap 5 layout, главная, каталоги и detail pages марок, моделей, модификаций, технологий и статей, базовые фильтры и пользовательская аутентификация.
 
 Сравнение и механизм рекомендаций остаются следующими этапами.

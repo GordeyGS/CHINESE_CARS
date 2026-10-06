@@ -1,3 +1,4 @@
+from .assistance import POPULAR_QUERIES, SearchAssistanceService, SearchSuggestion
 from .coordinator import SearchCoordinator, SearchPageResponse
 from .external_search import (
     BraveSearchProvider,
@@ -17,6 +18,7 @@ from .internal_search import InternalSearchService, SearchResponse, SearchResult
 from .query_parser import ParsedQuery, QueryParser, QueryType, QueryValidationError
 
 __all__ = [
+    "POPULAR_QUERIES",
     "BraveSearchProvider",
     "ExternalSearchError",
     "ExternalSearchOutcome",
@@ -33,9 +35,11 @@ __all__ = [
     "QueryType",
     "QueryValidationError",
     "SearchCoordinator",
+    "SearchAssistanceService",
     "SearchPageResponse",
     "SearchResponse",
     "SearchResult",
+    "SearchSuggestion",
     "TavilyExternalSearchProvider",
     "get_external_search_provider",
 ]

@@ -1,0 +1,35 @@
+/* Shared autocomplete styles live here to keep the base stylesheet small. */
+.autocomplete-host {
+    position: relative;
+}
+
+.autocomplete-list {
+    position: absolute;
+    z-index: 1080;
+    top: calc(100% + .35rem);
+    left: 0;
+    right: 0;
+    min-width: min(24rem, 90vw);
+    max-height: 20rem;
+    overflow-y: auto;
+}
+
+.autocomplete-list[hidden] { display: none; }
+.autocomplete-option { display: flex; justify-content: space-between; gap: 1rem; text-align: left; }
+.autocomplete-option small { color: #637180; }
+.autocomplete-option.active { color: #fff; background: #0b7c78; }
+.autocomplete-option.active small { color: rgba(255, 255, 255, .8); }
+
+@media (max-width: 575.98px) {
+    .container > .row {
+        margin-left: 0;
+        margin-right: 0;
+    }
+
+    .container > .row > [class*="col"] {
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    .autocomplete-list { min-width: 100%; }
+}
