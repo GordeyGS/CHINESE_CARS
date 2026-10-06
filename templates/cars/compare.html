@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Сравнение автомобилей — Китайский автопром{% endblock %}
+{% block content %}
+<header class="page-header">
+    <div class="container">
+        <p class="eyebrow">Сравнение модификаций</p>
+        <h1>Сравнение автомобилей</h1>
+        <p class="text-secondary mb-0">Выберите две модификации. Результат можно сохранить или отправить как обычную ссылку.</p>
+    </div>
+</header>
+<div class="container py-5">
+    <form class="filter-panel p-3 p-lg-4 mb-5" method="get">
+        {% if form.non_field_errors %}<div class="alert alert-danger" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+        <div class="row g-3 align-items-end">
+            {% for field in form %}
+                <div class="col-lg-5">
+                    <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.errors %}<div class="text-danger small mt-1">{{ field.errors|striptags }}</div>{% endif %}
+                </div>
+            {% endfor %}
+            <div class="col-lg-2"><button class="btn btn-accent w-100" type="submit">Сравнить</button></div>
+        </div>
+    </form>
+
+    {% if sections %}
+        <div class="comparison-heading row g-3 mb-3" aria-hidden="true">
+            <div class="col-4"></div>
+            <div class="col-4"><strong>{{ left.generation.model }}<br>{{ left.name }}</strong></div>
+            <div class="col-4"><strong>{{ right.generation.model }}<br>{{ right.name }}</strong></div>
+        </div>
+        <div class="comparison-table" role="table" aria-label="Сравнение двух автомобильных модификаций">
+            {% for section in sections %}
+                <section class="comparison-section" role="rowgroup">
+                    <h2 class="h4 comparison-section-title">{{ section.title }}</h2>
+                    {% for row in section.rows %}
+                        <div class="comparison-row{% if row.different %} comparison-row-different{% endif %}" role="row">
+                            <div class="comparison-label" role="rowheader">{{ row.label }}</div>
+                            <div class="comparison-value comparison-value-{{ row.left.state }}" role="cell" data-car="{{ left.generation.model }} {{ left.name }}">{{ row.left.text|linebreaksbr }}</div>
+                            <div class="comparison-value comparison-value-{{ row.right.state }}" role="cell" data-car="{{ right.generation.model }} {{ right.name }}">{{ row.right.text|linebreaksbr }}</div>
+                        </div>
+                    {% endfor %}
+                </section>
+            {% endfor %}
+        </div>
+        <p class="small text-secondary mt-3"><span class="comparison-legend-missing">Нет данных</span> — значение пока не внесено. <span class="comparison-legend-na">Не применяется</span> — характеристика неприменима к этому типу силовой установки.</p>
+    {% elif not form.is_bound %}
+        <div class="empty-state">Выберите две модификации, чтобы увидеть сопоставимые характеристики.</div>
+    {% endif %}
+</div>
+{% endblock %}

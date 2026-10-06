@@ -5,6 +5,7 @@ from . import views
 app_name = "cars"
 
 urlpatterns = [
+    path("compare/", views.compare, name="compare"),
     path("brands/", views.brand_list, name="brand-list"),
     path("brands/<slug:slug>/", views.brand_detail, name="brand-detail"),
     path("cars/", views.car_list, name="model-list"),

@@ -3,6 +3,7 @@ from django.shortcuts import get_object_or_404, render
 
 from apps.knowledge.models import Article
 
+from .forms import ComparisonForm
 from .models import (
     BodyType,
     Brand,
@@ -14,6 +15,19 @@ from .models import (
     Powertrain,
     Technology,
 )
+from .services.comparison import build_comparison, comparison_queryset
+
+
+def compare(request):
+    modifications = comparison_queryset()
+    is_submitted = "left" in request.GET or "right" in request.GET
+    form = ComparisonForm(request.GET if is_submitted else None, queryset=modifications)
+    context = {"form": form}
+    if is_submitted and form.is_valid():
+        left = form.cleaned_data["left"]
+        right = form.cleaned_data["right"]
+        context.update({"left": left, "right": right, "sections": build_comparison(left, right)})
+    return render(request, "cars/compare.html", context)
 
 
 def brand_list(request):
