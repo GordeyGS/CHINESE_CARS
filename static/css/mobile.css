@@ -20,6 +20,31 @@
 .autocomplete-option.active { color: #fff; background: #0b7c78; }
 .autocomplete-option.active small { color: rgba(255, 255, 255, .8); }
 
+.video-resource-card {
+    overflow: hidden;
+    border-color: #dce4e8;
+    box-shadow: 0 .25rem .9rem rgba(20, 40, 50, .06);
+}
+
+.video-thumbnail {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    background: #e7edef;
+}
+
+.video-placeholder {
+    display: grid;
+    place-content: center;
+    gap: .35rem;
+    color: #49616e;
+    text-align: center;
+    background: linear-gradient(135deg, #e7edef, #d8e4e7);
+}
+
+.video-placeholder span { font-size: 1.65rem; }
+.video-meta { position: relative; z-index: 2; }
+
 @media (max-width: 575.98px) {
     .container > .row {
         margin-left: 0;

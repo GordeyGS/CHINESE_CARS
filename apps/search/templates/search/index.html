@@ -48,6 +48,9 @@
                             </div>
                             <div class="result-list">
                                 {% for result in section.results %}
+                                    {% if result.result_type == "Video" %}
+                                        {% include "includes/video_card.html" with video=result %}
+                                    {% else %}
                                     <article class="result-card">
                                         <div class="result-meta">
                                             <span class="result-type">{{ result.result_type }}</span>
@@ -59,6 +62,7 @@
                                         </h3>
                                         <p>{{ result.description }}</p>
                                     </article>
+                                    {% endif %}
                                 {% endfor %}
                             </div>
                         </section>

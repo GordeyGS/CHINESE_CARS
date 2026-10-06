@@ -17,6 +17,7 @@ GROUP_LABELS = {
     "Technologies": "Технологии",
     "Videos": "Видео",
 }
+QUERY_TYPE_LABELS = {"WORD": "слово", "PHRASE": "словосочетание", "SENTENCE": "предложение"}
 
 
 def search_page(request):
@@ -47,7 +48,7 @@ def search_page(request):
                 {
                     "query": internal.query.normalized,
                     "original_query": internal.query.original.strip(),
-                    "query_type": internal.query.query_type.value,
+                    "query_type": QUERY_TYPE_LABELS[internal.query.query_type.value],
                     "terms": internal.query.terms,
                     "total": response.total,
                     "group_sections": [

@@ -138,6 +138,14 @@ class Model(SourcedModel):
     def __str__(self):
         return f"{self.brand.name} {self.name}"
 
+    def get_production_status_display(self):
+        labels = {
+            self.ProductionStatus.UPCOMING: "Ожидается",
+            self.ProductionStatus.IN_PRODUCTION: "В производстве",
+            self.ProductionStatus.DISCONTINUED: "Производство завершено",
+        }
+        return labels.get(self.production_status, self.production_status)
+
 
 class Generation(SourcedModel):
     model = models.ForeignKey(Model, on_delete=models.PROTECT, related_name="generations")

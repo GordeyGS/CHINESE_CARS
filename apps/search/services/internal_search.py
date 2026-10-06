@@ -31,6 +31,9 @@ class SearchResult:
     score: float
     object_id: int
     source: str
+    thumbnail_url: str = ""
+    provider: str = ""
+    published_at: object = None
 
 
 @dataclass(frozen=True)
@@ -91,6 +94,9 @@ class InternalSearchService:
                     score=calculate_score(item, parsed, result.title, searchable_text),
                     object_id=result.object_id,
                     source=result.source,
+                    thumbnail_url=result.thumbnail_url,
+                    provider=result.provider,
+                    published_at=result.published_at,
                 )
             )
         return results
@@ -277,6 +283,9 @@ class InternalSearchService:
                     score=0.0,
                     object_id=item.pk,
                     source=f"knowledge.VideoResource:{item.pk}",
+                    thumbnail_url=item.thumbnail_url,
+                    provider=item.provider,
+                    published_at=item.published_at,
                 ),
                 f"{item.title} {item.description} {item.provider}",
             ),

@@ -144,6 +144,13 @@ def test_internal_search_results_link_to_detail_pages(client):
     assert reverse("cars:model-detail", args=["zeekr-001"]) in cars
 
 
+def test_video_search_result_uses_shared_card(client):
+    content = client.get(reverse("search:index"), {"q": "BYD"}).content.decode()
+    assert "video-resource-card" in content
+    assert "video-placeholder" in content
+    assert "Демо-провайдер" in content
+
+
 @pytest.mark.parametrize(
     ("query", "expected"),
     [("BY", "BYD"), ("zee", "Zeekr"), ("zee", "Zeekr 001"), ("blade", "Blade Battery")],

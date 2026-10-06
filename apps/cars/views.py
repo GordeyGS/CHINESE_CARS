@@ -109,7 +109,16 @@ def modification_detail(request, slug):
         slug=slug,
         is_active=True,
     )
-    return render(request, "cars/modification_detail.html", {"modification": modification})
+    technology_ids = set(modification.generation.model.technologies.values_list("id", flat=True))
+    technology_ids.update(modification.generation.technologies.values_list("id", flat=True))
+    if modification.powertrain.battery and modification.powertrain.battery.technology_id:
+        technology_ids.add(modification.powertrain.battery.technology_id)
+    technologies = Technology.objects.filter(id__in=technology_ids, is_active=True)
+    return render(
+        request,
+        "cars/modification_detail.html",
+        {"modification": modification, "technologies": technologies},
+    )
 
 
 def technology_list(request):
