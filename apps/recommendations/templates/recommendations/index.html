@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Подбор автомобиля — China Auto KB{% endblock %}
+{% block content %}
+<section class="page-header"><div class="container"><p class="eyebrow">Объяснимый подбор</p><h1 class="mb-2">Подбор автомобиля по правилам</h1><p class="text-secondary mb-0">Обязательные условия исключают неподходящие модификации, а пожелания влияют на порядок результатов.</p></div></section>
+<div class="container py-4 py-lg-5"><div class="recommendation-layout">
+<aside><form method="get" class="filter-panel p-3 p-lg-4" novalidate>
+<h2 class="h5">Обязательные условия</h2><p class="small text-secondary">Кузов, установка, привод, рынок и бюджет.</p>
+{% for field in form %}{% if field.name == "min_power_kw" %}<hr><h2 class="h5">Пожелания</h2><p class="small text-secondary">Они добавляют баллы, но не исключают автомобиль.</p>{% endif %}<div class="mb-3"><label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}</div>{% endfor %}
+{% for error in form.non_field_errors %}<div class="alert alert-danger py-2">{{ error }}</div>{% endfor %}<button class="btn btn-accent w-100" type="submit">Подобрать</button></form></aside>
+<section aria-live="polite">
+{% if results is not None %}
+{% if not has_exact_matches %}<div class="alert alert-warning"><h2 class="h5">Полных совпадений нет</h2><p class="mb-0">Ни одна модификация не выполнила все обязательные условия. Ниже показаны ближайшие варианты как частично подходящие. Попробуйте убрать ограничение по приводу, изменить тип установки или расширить бюджет.</p></div>{% endif %}
+{% for result in results %}<article class="recommendation-card mb-3{% if not result.exact %} recommendation-card-partial{% endif %}"><div class="d-flex flex-column flex-sm-row justify-content-between gap-3"><div><span class="badge {% if result.exact %}badge-soft{% else %}text-bg-warning{% endif %} mb-2">{% if result.exact %}Подходит{% else %}Частично подходит{% endif %}</span><h2 class="h4 mb-1">{{ result.modification }}</h2><p class="text-secondary mb-0">{{ result.modification.generation.body_type.name }} · {{ result.modification.powertrain.type }} · {{ result.modification.powertrain.drive_type.code }}</p></div><div class="score-block" aria-label="Совпадение {{ result.score }} процентов"><strong>{{ result.score }}%</strong><span>совпадение</span></div></div>
+<div class="progress my-3" role="progressbar" aria-label="Совпадение" aria-valuenow="{{ result.score }}" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar" style="width: {{ result.score }}%"></div></div><p class="small text-secondary">{{ result.price_text }}</p>
+<div class="row g-3"><div class="col-md-6"><h3 class="h6">Почему подходит</h3><ul class="explanation-list explanation-positive">{% for item in result.matched %}<li>{{ item }}</li>{% empty %}<li>Нет отмеченных совпадений</li>{% endfor %}</ul></div><div class="col-md-6"><h3 class="h6">Компромиссы</h3><ul class="explanation-list explanation-negative">{% for item in result.compromises %}<li>{{ item }}</li>{% empty %}<li>Указанные пожелания выполнены</li>{% endfor %}</ul></div></div>
+<div class="d-flex flex-wrap gap-2 mt-3"><a class="btn btn-sm btn-accent" href="{{ result.detail_url }}">Подробнее</a><a class="btn btn-sm btn-outline-secondary" href="{{ result.compare_url }}">Сравнить</a></div></article>{% empty %}<div class="empty-state">В базе пока нет активных модификаций для подбора.</div>{% endfor %}
+{% elif is_submitted and form.errors %}<div class="alert alert-danger">Исправьте отмеченные поля формы.</div>{% else %}<div class="empty-state"><h2 class="h5">Задайте условия</h2><p class="mb-0">Результаты и объяснения появятся здесь. Подбор не сохраняет историю и не использует внешний AI.</p></div>{% endif %}
+</section></div></div>
+{% endblock %}

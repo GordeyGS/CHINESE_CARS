@@ -23,5 +23,6 @@ urlpatterns = [
     path('', include('apps.knowledge.urls')),
     path('accounts/', include('apps.users.urls')),
     path('search/', include('apps.search.urls')),
+    path('recommendations/', include('apps.recommendations.urls')),
     path('admin/', admin.site.urls),
 ]

@@ -27,6 +27,7 @@ from apps.cars.models import (
     TrimLevel,
 )
 from apps.knowledge.models import Article, Category, Source, Tag, VideoResource
+from apps.recommendations.models import RecommendationCondition, RecommendationRule
 
 
 class Command(BaseCommand):
@@ -367,4 +368,22 @@ class Command(BaseCommand):
         video.articles.add(blade_article, sea_article)
         video.vehicle_models.add(seal, zeekr_001)
         video.technologies.add(blade, sea)
+        range_rule, _ = RecommendationRule.objects.update_or_create(
+            code="long-range",
+            defaults={"name": "Большой запас хода", "description": "Редакторское предпочтение для демонстрационного подбора.", "rule_kind": RecommendationRule.Kind.SOFT, "weight": 1, "explanation_template": "запас хода не менее 500 км", "priority": 10, "is_active": True},
+        )
+        RecommendationCondition.objects.update_or_create(
+            rule=range_rule,
+            field=RecommendationCondition.Field.RANGE,
+            defaults={"operator": RecommendationCondition.Operator.GTE, "value_json": 500, "negate": False},
+        )
+        power_rule, _ = RecommendationRule.objects.update_or_create(
+            code="high-power",
+            defaults={"name": "Высокая мощность", "description": "Редакторское предпочтение для демонстрационного подбора.", "rule_kind": RecommendationRule.Kind.SOFT, "weight": 1, "explanation_template": "системная мощность не менее 300 кВт", "priority": 20, "is_active": True},
+        )
+        RecommendationCondition.objects.update_or_create(
+            rule=power_rule,
+            field=RecommendationCondition.Field.POWER,
+            defaults={"operator": RecommendationCondition.Operator.GTE, "value_json": 300, "negate": False},
+        )
         self.stdout.write(self.style.SUCCESS(f"Demo data ready: {seal_mod}; {zeekr_mod}."))
