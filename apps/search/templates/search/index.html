@@ -1,7 +1,7 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static assets %}
 {% block title %}Поиск — Китайский автопром{% endblock %}
-{% block extra_css %}<link rel="stylesheet" href="{% static 'search/search.css' %}"><link rel="stylesheet" href="{% static 'search/assistance.css' %}">{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% asset 'search/search.css' %}"><link rel="stylesheet" href="{% asset 'search/assistance.css' %}">{% endblock %}
 {% block content %}
     <header class="page-header">
         <div class="container">
