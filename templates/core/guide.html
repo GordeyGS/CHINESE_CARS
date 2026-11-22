@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Общие сведения — Китайский автопром{% endblock %}
+{% block content %}
+<header class="page-header">
+    <div class="container">
+        <nav aria-label="Хлебные крошки"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="{% url 'core:home' %}">Главная</a></li><li class="breadcrumb-item active" aria-current="page">Общие сведения</li></ol></nav>
+        <p class="eyebrow">Справка</p>
+        <h1>Общие сведения о базе знаний</h1>
+        <p class="lead text-secondary mb-0">Основные термины, обозначения и ориентиры, которые помогают читать каталог, сравнивать модификации и подбирать автомобиль.</p>
+    </div>
+</header>
+<div class="container py-5">
+    <section class="mb-5" aria-labelledby="guide-stats">
+        <h2 id="guide-stats" class="visually-hidden">Содержимое базы</h2>
+        <div class="row g-3 guide-stats">
+            <div class="col-6 col-md"><div class="info-card text-center"><strong>{{ stats.brands }}</strong><span>марок</span></div></div>
+            <div class="col-6 col-md"><div class="info-card text-center"><strong>{{ stats.models }}</strong><span>моделей</span></div></div>
+            <div class="col-6 col-md"><div class="info-card text-center"><strong>{{ stats.modifications }}</strong><span>модификаций</span></div></div>
+            <div class="col-6 col-md"><div class="info-card text-center"><strong>{{ stats.articles }}</strong><span>статей</span></div></div>
+            <div class="col-12 col-md"><div class="info-card text-center"><strong>{{ stats.sources }}</strong><span>источников</span></div></div>
+        </div>
+    </section>
+
+    <div class="row g-5">
+        <div class="col-lg-8">
+            <section class="mb-5" id="hierarchy">
+                <h2 class="mb-3">Как устроена база знаний</h2>
+                <p>Сведения об автомобилях связаны иерархией: каждый следующий уровень уточняет предыдущий. Сравнение и подбор работают на уровне модификаций, потому что только у модификации однозначно определены силовая установка, привод и числовые характеристики.</p>
+                <dl class="definition-list">
+                    {% for term, description in hierarchy_terms %}<dt>{{ term }}</dt><dd class="fw-normal">{{ description }}</dd>{% endfor %}
+                </dl>
+            </section>
+
+            <section class="mb-5" id="powertrains">
+                <h2 class="mb-3">Типы силовых установок</h2>
+                <div class="row g-3">
+                    {% for item in powertrain_types %}
+                    <div class="col-md-6">
+                        <article class="info-card">
+                            <div class="d-flex justify-content-between align-items-start gap-2">
+                                <h3 class="h5 mb-1">{{ item.code }}</h3>
+                                <span class="badge badge-soft">в базе: {{ item.count }}</span>
+                            </div>
+                            <p class="small text-secondary mb-2" lang="en">{{ item.full_name }}</p>
+                            <p class="mb-2">{{ item.description }}</p>
+                            {% if item.count %}<a class="small" href="{% url 'cars:model-list' %}?powertrain={{ item.code }}">Модели с установкой {{ item.code }} →</a>{% endif %}
+                        </article>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section class="mb-5" id="choosing">
+                <h2 class="mb-3">Ориентиры при выборе автомобиля</h2>
+                <ol class="guide-steps">
+                    <li><strong>Определите сценарий использования.</strong> Для городских поездок с доступом к зарядке подходят BEV, для дальних поездок без развитой зарядной сети — PHEV или EREV.</li>
+                    <li><strong>Выберите рынок.</strong> Доступность, комплектации и цены отличаются по рынкам, поэтому цена в базе всегда показывается вместе с рынком и валютой.</li>
+                    <li><strong>Сравнивайте запас хода по одному циклу.</strong> Китайский цикл CLTC обычно даёт более высокие значения, чем европейский WLTP; цикл указан рядом с запасом хода.</li>
+                    <li><strong>Сопоставьте модификации.</strong> Одна модель может иметь версии с разным приводом, батареей и мощностью — используйте <a href="{% url 'cars:compare' %}">сравнение</a>.</li>
+                    <li><strong>Получите объяснимую рекомендацию.</strong> <a href="{% url 'recommendations:index' %}">Подбор</a> показывает выполненные условия, компромиссы и процент соответствия.</li>
+                </ol>
+            </section>
+
+            <section class="mb-5" id="search-help">
+                <h2 class="mb-3">Как искать</h2>
+                <p>Поиск принимает слово, словосочетание или целый вопрос. Точная фраза ранжируется выше разрозненных совпадений, а при опечатке система предложит близкое название, не заменяя запрос автоматически.</p>
+                <ul class="list-unstyled d-flex flex-wrap gap-2">
+                    <li><a class="btn btn-sm btn-outline-secondary" href="{% url 'search:index' %}?q=BYD">слово: BYD</a></li>
+                    <li><a class="btn btn-sm btn-outline-secondary" href="{% url 'search:index' %}?q=Blade+Battery">фраза: Blade Battery</a></li>
+                    <li><a class="btn btn-sm btn-outline-secondary" href="{% url 'search:index' %}?q=Какие+электромобили+BYD+используют+Blade+Battery%3F">вопрос о Blade Battery</a></li>
+                    <li><a class="btn btn-sm btn-outline-secondary" href="{% url 'search:index' %}?q=Zeek+001">опечатка: Zeek 001</a></li>
+                </ul>
+            </section>
+        </div>
+
+        <aside class="col-lg-4">
+            <div class="info-card mb-3">
+                <h2 class="h5">Обозначения</h2>
+                <dl class="definition-list guide-legend">
+                    <dt>Нет данных</dt><dd class="fw-normal">Факт не подтверждён источником и намеренно не заполнен; это не ноль.</dd>
+                    <dt>Не применяется</dt><dd class="fw-normal">Характеристика не имеет смысла для типа установки, например ДВС у BEV.</dd>
+                    <dt>Единицы</dt><dd class="fw-normal">кВт, Н·м, кВт·ч, мм, кг, км, км/ч, с.</dd>
+                    <dt>Цена</dt><dd class="fw-normal">Относится к комплектации конкретного рынка и указывается с валютой.</dd>
+                </dl>
+            </div>
+            <div class="info-card">
+                <h2 class="h5">Источники и актуальность</h2>
+                <p class="small">Статьи опираются на реестр источников с датой доступа. Внешние результаты поиска показываются отдельно и не считаются подтверждёнными фактами базы знаний.</p>
+                <a class="btn btn-sm btn-accent" href="{% url 'knowledge:source-list' %}">Все источники</a>
+            </div>
+        </aside>
+    </div>
+</div>
+{% endblock %}

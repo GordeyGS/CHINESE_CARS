@@ -1,0 +1,1 @@
+<div class="entity-media">{% if vehicle.image_url %}<img src="{{ vehicle.image_url }}" alt="{{ vehicle }}" loading="lazy">{% else %}<div class="entity-media-placeholder h-100" role="img" aria-label="Изображение {{ vehicle }} не добавлено"><span aria-hidden="true">{{ vehicle.brand.name|slice:':1' }}{{ vehicle.name|slice:':1' }}</span></div>{% endif %}</div>

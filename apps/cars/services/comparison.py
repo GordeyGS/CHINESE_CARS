@@ -1,6 +1,8 @@
 from dataclasses import dataclass
+from decimal import Decimal
 
 from django.db.models import Prefetch
+from django.template.defaultfilters import floatformat
 
 from ..models import Modification, Powertrain, TrimLevel
 
@@ -44,10 +46,17 @@ def comparison_queryset():
     )
 
 
+def _number(value):
+    """Show 230.00 as 230 (same rule as |floatformat:"-2" in detail pages)."""
+    if isinstance(value, Decimal):
+        return floatformat(value, -2)
+    return value
+
+
 def _value(value, suffix=""):
     if value is None or value == "":
         return NOT_AVAILABLE
-    return ComparisonValue(f"{value}{suffix}")
+    return ComparisonValue(f"{_number(value)}{suffix}")
 
 
 def _combustion_engine_value(modification):
@@ -61,7 +70,7 @@ def _combustion_engine_value(modification):
     if engine.displacement_cc:
         details.append(f"{engine.displacement_cc} см³")
     if engine.power_kw is not None:
-        details.append(f"{engine.power_kw} кВт")
+        details.append(f"{_number(engine.power_kw)} кВт")
     return ComparisonValue(" · ".join(details))
 
 
@@ -75,7 +84,7 @@ def _motors_value(modification):
         if link.quantity > 1:
             details.append(f"× {link.quantity}")
         if link.electric_motor.power_kw is not None:
-            details.append(f"{link.electric_motor.power_kw} кВт")
+            details.append(f"{_number(link.electric_motor.power_kw)} кВт")
         motors.append(" · ".join(details))
     return ComparisonValue("\n".join(motors)) if motors else NOT_AVAILABLE
 
@@ -108,7 +117,7 @@ def _offers_value(modification, kind):
                     period = f"; с {trim.valid_from:%d.%m.%Y}"
                     if trim.valid_to:
                         period += f" по {trim.valid_to:%d.%m.%Y}"
-                lines.append(f"{offer.market.name}, {trim.name}: {trim.price_amount} {trim.currency_code}{period}")
+                lines.append(f"{offer.market.name}, {trim.name}: {_number(trim.price_amount)} {trim.currency_code}{period}")
     return ComparisonValue("\n".join(lines)) if lines else NOT_AVAILABLE
 
 

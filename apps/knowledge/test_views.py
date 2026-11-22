@@ -2,7 +2,7 @@ import pytest
 from django.core.management import call_command
 from django.urls import reverse
 
-from .models import Article, VideoResource
+from .models import Article, Source, VideoResource
 
 
 pytestmark = pytest.mark.django_db
@@ -43,3 +43,38 @@ def test_unpublished_article_is_hidden(client):
     article.save(update_fields=["status"])
     assert client.get(reverse("knowledge:article-detail", args=[article.slug])).status_code == 404
     assert article.title not in client.get(reverse("knowledge:article-list")).content.decode()
+
+
+def test_source_list_shows_active_sources_with_published_articles(client):
+    hidden = Source.objects.create(name="Скрытый источник", url="https://example.com/hidden", is_active=False)
+    article = Article.objects.get(slug="blade-battery-overview")
+    source = article.sources.first()
+
+    response = client.get(reverse("knowledge:source-list"))
+    content = response.content.decode()
+
+    assert response.status_code == 200
+    assert source.name in content
+    assert source.url in content
+    assert reverse("knowledge:article-detail", args=[article.slug]) in content
+    assert hidden.name not in content
+    assert 'rel="noopener noreferrer nofollow"' in content
+
+
+def test_source_list_hides_draft_articles(client):
+    article = Article.objects.get(slug="blade-battery-overview")
+    article.status = Article.Status.DRAFT
+    article.save(update_fields=["status"])
+
+    content = client.get(reverse("knowledge:source-list")).content.decode()
+
+    assert reverse("knowledge:article-detail", args=[article.slug]) not in content
+
+
+def test_article_list_is_paginated(client, monkeypatch):
+    monkeypatch.setattr("apps.knowledge.views.ARTICLES_PER_PAGE", 1)
+
+    response = client.get(reverse("knowledge:article-list"))
+
+    assert response.context["page_obj"].paginator.num_pages == Article.objects.filter(status="published").count()
+    assert "?page=2" in response.content.decode()

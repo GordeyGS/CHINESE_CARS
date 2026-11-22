@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Источники — Китайский автопром{% endblock %}
+{% block content %}
+<header class="page-header"><div class="container"><p class="eyebrow">База знаний</p><h1>Полезные источники</h1><p class="text-secondary mb-0">Реестр официальных и справочных материалов, на которые опираются статьи. Ссылки ведут на внешние сайты.</p></div></header>
+<div class="container py-5">
+    <p class="text-secondary">Источников: {{ page_obj.paginator.count }}</p>
+    <div class="row g-3">
+        {% for source in sources %}
+        <div class="col-lg-6">
+            <article class="info-card source-card">
+                <div class="d-flex justify-content-between gap-2 flex-wrap">
+                    <span class="badge badge-soft">{{ source.publisher|default:"Издатель не указан" }}</span>
+                    {% if source.accessed_at %}<small class="text-secondary">Дата доступа: <time datetime="{{ source.accessed_at|date:'Y-m-d' }}">{{ source.accessed_at|date:"d.m.Y" }}</time></small>{% endif %}
+                </div>
+                <h2 class="h5 mt-3"><a href="{{ source.url }}" target="_blank" rel="noopener noreferrer nofollow">{{ source.name }} ↗</a></h2>
+                <p class="small text-secondary text-break mb-2">{{ source.url }}</p>
+                {% if source.notes %}<p class="mb-2">{{ source.notes }}</p>{% endif %}
+                {% if source.published_articles %}
+                    <p class="small mb-1 fw-semibold">Используется в статьях ({{ source.article_count }}):</p>
+                    <ul class="small mb-0">{% for article in source.published_articles %}<li><a href="{% url 'knowledge:article-detail' article.slug %}">{{ article.title }}</a></li>{% endfor %}</ul>
+                {% else %}
+                    <p class="small text-secondary mb-0">Пока не связан с опубликованными статьями.</p>
+                {% endif %}
+            </article>
+        </div>
+        {% empty %}
+        <div class="col-12"><div class="empty-state">Активные источники пока не добавлены.</div></div>
+        {% endfor %}
+    </div>
+    {% include "includes/pagination.html" %}
+</div>
+{% endblock %}

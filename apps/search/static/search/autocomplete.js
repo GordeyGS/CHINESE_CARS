@@ -36,10 +36,14 @@
 
         const setActive = (index) => {
             const options = list.querySelectorAll("[role=option]");
-            options.forEach((option) => option.classList.remove("active"));
+            options.forEach((option) => {
+                option.classList.remove("active");
+                option.setAttribute("aria-selected", "false");
+            });
             if (!options.length) return;
             activeIndex = (index + options.length) % options.length;
             options[activeIndex].classList.add("active");
+            options[activeIndex].setAttribute("aria-selected", "true");
             input.setAttribute("aria-activedescendant", options[activeIndex].id);
         };
 

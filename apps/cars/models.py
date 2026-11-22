@@ -54,6 +54,8 @@ class Brand(SourcedModel):
     founded_year = models.PositiveSmallIntegerField(null=True, blank=True)
     discontinued_year = models.PositiveSmallIntegerField(null=True, blank=True)
     description = models.TextField(blank=True)
+    image_url = models.URLField(blank=True, help_text="Ссылка на логотип марки у внешнего источника; файл не хранится в БД.")
+    image_credit = models.CharField(max_length=200, blank=True, help_text="Автор или источник изображения и лицензия.")
     is_active = models.BooleanField(default=True, db_index=True)
 
     class Meta:
@@ -127,6 +129,8 @@ class Model(SourcedModel):
     production_status = models.CharField(
         max_length=20, choices=ProductionStatus.choices, default=ProductionStatus.IN_PRODUCTION, db_index=True
     )
+    image_url = models.URLField(blank=True, help_text="Ссылка на изображение модели у внешнего источника; файл не хранится в БД.")
+    image_credit = models.CharField(max_length=200, blank=True, help_text="Автор или источник изображения и лицензия.")
     is_active = models.BooleanField(default=True, db_index=True)
     technologies = models.ManyToManyField(Technology, through="ModelTechnology", related_name="models", blank=True)
 

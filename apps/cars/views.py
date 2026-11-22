@@ -1,21 +1,29 @@
+from django.core.paginator import Paginator
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, render
 
 from apps.knowledge.models import Article
 
-from .forms import ComparisonForm
+from .forms import CarFilterForm, ComparisonForm
 from .models import (
     BodyType,
     Brand,
     DriveType,
     DriverAssistanceSystem,
+    Market,
     Model,
     Modification,
     Platform,
     Powertrain,
     Technology,
+    TrimLevel,
 )
+from .services.catalog import filter_vehicle_models
 from .services.comparison import build_comparison, comparison_queryset
+
+
+CARS_PER_PAGE = 12
+BRANDS_PER_PAGE = 24
 
 
 def compare(request):
@@ -35,11 +43,13 @@ def brand_list(request):
         Brand.objects.filter(is_active=True, manufacturer__is_active=True)
         .select_related("manufacturer", "origin_country")
         .annotate(model_count=Count("models", filter=Q(models__is_active=True)))
+        .order_by("name")
     )
     manufacturer = request.GET.get("manufacturer")
-    if manufacturer:
+    if manufacturer and manufacturer.isdigit():
         brands = brands.filter(manufacturer_id=manufacturer)
-    return render(request, "cars/brand_list.html", {"brands": brands})
+    page_obj = Paginator(brands, BRANDS_PER_PAGE).get_page(request.GET.get("page"))
+    return render(request, "cars/brand_list.html", {"brands": page_obj, "page_obj": page_obj})
 
 
 def brand_detail(request, slug):
@@ -58,29 +68,38 @@ def brand_detail(request, slug):
 
 
 def car_list(request):
-    cars = Model.objects.filter(is_active=True, brand__is_active=True).select_related("brand", "brand__manufacturer")
-    selected = {
-        "brand": request.GET.get("brand", ""),
-        "body": request.GET.get("body", ""),
-        "powertrain": request.GET.get("powertrain", ""),
-        "drive": request.GET.get("drive", ""),
-    }
-    if selected["brand"]:
-        cars = cars.filter(brand__slug=selected["brand"])
-    if selected["body"]:
-        cars = cars.filter(generations__body_type__code=selected["body"])
-    if selected["powertrain"]:
-        cars = cars.filter(generations__modifications__powertrain__type=selected["powertrain"])
-    if selected["drive"]:
-        cars = cars.filter(generations__modifications__powertrain__drive_type__code=selected["drive"])
-    cars = cars.prefetch_related("generations__body_type", "generations__modifications__powertrain").distinct()
+    form = CarFilterForm(request.GET or None)
+    filters = {}
+    if form.is_bound:
+        form.is_valid()
+        filters = dict(form.cleaned_data)
+        if form.errors:
+            # An invalid budget is reported to the user and ignored; other filters still apply.
+            for name in ("min_price", "max_price", "currency"):
+                filters.pop(name, None)
+    cars = filter_vehicle_models(
+        Model.objects.filter(is_active=True, brand__is_active=True).select_related("brand", "brand__manufacturer"),
+        filters,
+    ).prefetch_related("generations__body_type", "generations__modifications__powertrain__drive_type")
+    page_obj = Paginator(cars, CARS_PER_PAGE).get_page(request.GET.get("page"))
+    selected = {name: request.GET.get(name, "") for name in CarFilterForm.base_fields}
+    active_filter_count = sum(1 for name, value in selected.items() if value)
     context = {
-        "cars": cars,
+        "cars": page_obj,
+        "page_obj": page_obj,
+        "form": form,
         "brands": Brand.objects.filter(is_active=True),
         "body_types": BodyType.objects.filter(generations__model__is_active=True).distinct(),
         "powertrain_types": Powertrain.Type.choices,
         "drive_types": DriveType.objects.filter(powertrains__modifications__is_active=True).distinct(),
+        "markets": Market.objects.filter(modification_offers__modification__is_active=True).distinct().order_by("name"),
+        "currencies": TrimLevel.objects.filter(is_active=True, price_amount__isnull=False)
+        .exclude(currency_code="")
+        .values_list("currency_code", flat=True)
+        .distinct()
+        .order_by("currency_code"),
         "selected": selected,
+        "active_filter_count": active_filter_count,
     }
     return render(request, "cars/model_list.html", context)
 

@@ -14,6 +14,8 @@
 - используемые справочники защищаются от случайного удаления;
 - M:N-связи с собственными атрибутами имеют явную промежуточную таблицу.
 
+Имена таблиц в документе логические. Django создаёт физические имена с префиксом приложения: `cars_brand`, `cars_model` (логическая `vehicle_model`), `knowledge_article`, `knowledge_category` (логическая `article_category`), `knowledge_videoresource` (логическая `video_resource`). Явно заданы только имена M:N-таблиц связей статей и видео (`article_tag`, `video_model` и т. д.) и `related_article`.
+
 Для основных редактируемых предметных сущностей предусматриваются необязательные поля `source_url` и `source_note`. Статьи используют отдельный реестр `source`; привязка отдельных структурированных фактов к нескольким источникам отложена до появления такого требования.
 
 ## 2. Основные таблицы
@@ -24,8 +26,8 @@
 |---|---|---|
 | `country` | `name`, `iso_code` | уникальные `name`, `iso_code` |
 | `manufacturer` | `name`, `slug`, `country_id`, `founded_year`, `description`, `is_active` | N:1 к стране |
-| `brand` | `manufacturer_id`, `origin_country_id`, `name`, `slug`, `founded_year`, `discontinued_year`, `description`, `is_active` | N:1 к производителю и стране; уникально `(manufacturer_id, name)` |
-| `vehicle_model` | `brand_id`, `name`, `slug`, `segment`, `description`, `production_status`, `is_active` | N:1 к марке; уникально `(brand_id, name)` |
+| `brand` | `manufacturer_id`, `origin_country_id`, `name`, `slug`, `founded_year`, `discontinued_year`, `description`, `image_url`, `image_credit`, `is_active` | N:1 к производителю и стране; уникально `(manufacturer_id, name)` |
+| `vehicle_model` | `brand_id`, `name`, `slug`, `segment`, `description`, `production_status`, `image_url`, `image_credit`, `is_active` | N:1 к марке; уникально `(brand_id, name)` |
 | `platform` | `manufacturer_id`, `name`, `slug`, `description`, `is_active` | платформа может использоваться несколькими поколениями |
 | `body_type` | `code`, `name` | небольшой справочник |
 | `generation` | `model_id`, `platform_id`, `body_type_id`, `name`, `code`, `start_year`, `end_year`, `description`, `is_active` | проверка `end_year >= start_year`; уникальность имени в модели |
@@ -68,6 +70,8 @@
 | `modification_adas` | `modification_id`, `adas_id`, `availability`, `note` | M:N; стандартно/опция/недоступно |
 
 Технология привязывается к самому узкому достоверному уровню. Не следует одновременно создавать одинаковую связь на модели и поколении без смысловой причины.
+
+`image_url` и `image_credit` у марки и модели добавлены миграцией `cars.0003_brand_model_images`, потому что карточки сущностей должны показывать изображение и его авторство. Изображение хранится у внешнего источника, а не в БД или `MEDIA`; пустое значение означает, что изображения нет, и интерфейс показывает заглушку.
 
 ## 3. Контент базы знаний
 

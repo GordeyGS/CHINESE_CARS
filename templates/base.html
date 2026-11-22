@@ -13,24 +13,25 @@
 </head>
 <body class="d-flex flex-column min-vh-100">
 <header>
-    <nav class="navbar navbar-expand-lg navbar-dark site-navbar" aria-label="Основная навигация">
+    <nav class="navbar navbar-expand-xxl navbar-dark site-navbar" aria-label="Основная навигация">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'core:home' %}">
                 <span class="brand-mark" aria-hidden="true">中</span>
                 <span>China Auto KB</span>
+                <span class="visually-hidden">— на главную</span>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Открыть меню"><span class="navbar-toggler-icon"></span></button>
             <div class="collapse navbar-collapse" id="mainNav">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item"><a class="nav-link" href="{% url 'core:home' %}">Главная</a></li>
+                <ul class="navbar-nav me-auto mb-2 mb-xxl-0">
                     <li class="nav-item"><a class="nav-link" href="{% url 'cars:brand-list' %}">Марки</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'cars:model-list' %}">Автомобили</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'cars:compare' %}">Сравнение</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'recommendations:index' %}">Подбор</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'knowledge:article-list' %}">Статьи</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'core:guide' %}">Справка</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'search:index' %}">Поиск</a></li>
                 </ul>
-                <form class="header-search d-flex me-lg-3 mb-3 mb-lg-0 position-relative" action="{% url 'search:index' %}" method="get" role="search">
+                <form class="header-search d-flex me-xxl-3 mb-3 mb-xxl-0 position-relative" action="{% url 'search:index' %}" method="get" role="search">
                     <label class="visually-hidden" for="header-query">Поиск</label>
                     <input class="form-control form-control-sm" id="header-query" name="q" type="search" placeholder="Поиск по базе" maxlength="300" required data-search-autocomplete data-suggest-url="{% url 'search:suggest' %}" autocomplete="off" aria-autocomplete="list" aria-expanded="false">
                     <button class="btn btn-sm btn-accent" type="submit">Найти</button>
@@ -53,6 +54,11 @@
 <footer class="site-footer mt-5">
     <div class="container d-flex flex-column flex-md-row justify-content-between gap-2 py-4">
         <span>Учебная база знаний по китайскому автопрому</span>
+        <nav class="footer-links d-flex flex-wrap gap-3" aria-label="Дополнительные разделы">
+            <a href="{% url 'core:guide' %}">Общие сведения</a>
+            <a href="{% url 'knowledge:source-list' %}">Источники</a>
+            <a href="{% url 'cars:technology-list' %}">Технологии</a>
+        </nav>
         <span>Курсовой проект · 2026</span>
     </div>
 </footer>
