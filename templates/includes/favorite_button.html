@@ -1,0 +1,7 @@
+{% if user.is_authenticated %}
+<form method="post" action="{{ action }}" class="d-inline">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+    <button class="btn btn-sm {% if is_favorite %}btn-accent{% else %}btn-outline-secondary{% endif %}" type="submit" aria-pressed="{% if is_favorite %}true{% else %}false{% endif %}">{% if is_favorite %}★ В избранном{% else %}☆ В избранное{% endif %}</button>
+</form>
+{% else %}
+<a class="btn btn-sm btn-outline-secondary" href="{% url 'users:login' %}?next={{ request.get_full_path|urlencode }}">☆ Войдите, чтобы сохранить</a>
+{% endif %}

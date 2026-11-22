@@ -118,7 +118,10 @@ def model_detail(request, slug):
         is_active=True,
     )
     articles = vehicle.articles.filter(status=Article.Status.PUBLISHED).select_related("category")
-    return render(request, "cars/model_detail.html", {"vehicle": vehicle, "articles": articles})
+    is_favorite = request.user.is_authenticated and vehicle.favorited_by.filter(user=request.user).exists()
+    return render(
+        request, "cars/model_detail.html", {"vehicle": vehicle, "articles": articles, "is_favorite": is_favorite}
+    )
 
 
 def modification_detail(request, slug):

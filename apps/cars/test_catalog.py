@@ -96,6 +96,6 @@ def test_model_image_and_credit_are_rendered_with_fallback(client):
     listing = client.get(reverse("cars:model-list")).content.decode()
     brands = client.get(reverse("cars:brand-list")).content.decode()
     assert 'src="https://example.com/byd-seal.jpg"' in detail
-    assert "Изображение: Пресс-служба BYD" in detail
+    assert "Фото: Пресс-служба BYD" in detail
     assert 'src="https://example.com/byd-seal.jpg"' in listing
     assert 'alt="Логотип BYD"' in brands

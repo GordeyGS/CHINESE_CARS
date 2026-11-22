@@ -1,6 +1,16 @@
 from django.core.exceptions import ValidationError
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, URLValidator
 from django.db import models
+
+
+LOCAL_IMAGE_PREFIX = "/static/img/"
+
+
+def validate_image_reference(value):
+    """Allow an external http(s) image URL or a file shipped in static/img/."""
+    if value.startswith(LOCAL_IMAGE_PREFIX) and ".." not in value:
+        return
+    URLValidator(schemes=["http", "https"])(value)
 
 
 class TimeStampedModel(models.Model):
@@ -54,7 +64,10 @@ class Brand(SourcedModel):
     founded_year = models.PositiveSmallIntegerField(null=True, blank=True)
     discontinued_year = models.PositiveSmallIntegerField(null=True, blank=True)
     description = models.TextField(blank=True)
-    image_url = models.URLField(blank=True, help_text="Ссылка на логотип марки у внешнего источника; файл не хранится в БД.")
+    image_url = models.CharField(
+        max_length=500, blank=True, validators=[validate_image_reference],
+        help_text="Внешняя http(s)-ссылка на логотип или путь /static/img/… к файлу проекта; в БД файл не хранится.",
+    )
     image_credit = models.CharField(max_length=200, blank=True, help_text="Автор или источник изображения и лицензия.")
     is_active = models.BooleanField(default=True, db_index=True)
 
@@ -129,7 +142,10 @@ class Model(SourcedModel):
     production_status = models.CharField(
         max_length=20, choices=ProductionStatus.choices, default=ProductionStatus.IN_PRODUCTION, db_index=True
     )
-    image_url = models.URLField(blank=True, help_text="Ссылка на изображение модели у внешнего источника; файл не хранится в БД.")
+    image_url = models.CharField(
+        max_length=500, blank=True, validators=[validate_image_reference],
+        help_text="Внешняя http(s)-ссылка на изображение или путь /static/img/… к файлу проекта; в БД файл не хранится.",
+    )
     image_credit = models.CharField(max_length=200, blank=True, help_text="Автор или источник изображения и лицензия.")
     is_active = models.BooleanField(default=True, db_index=True)
     technologies = models.ManyToManyField(Technology, through="ModelTechnology", related_name="models", blank=True)

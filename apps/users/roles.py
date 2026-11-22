@@ -16,6 +16,7 @@ CONTENT_APPS = ("cars", "knowledge", "recommendations")
 EDITOR_ACTIONS = ("view", "add", "change")
 EDITOR_DELETABLE_MODELS = (
     ("knowledge", "relatedarticle"),
+    ("knowledge", "articlecomment"),
     ("recommendations", "recommendationcondition"),
 )
 ADMINISTRATOR_EXTRA = (

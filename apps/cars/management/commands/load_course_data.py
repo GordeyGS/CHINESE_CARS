@@ -111,6 +111,115 @@ BRANDS = {
 }
 
 
+# Freely licensed photos hosted on Wikimedia Commons (hotlinked, not stored).
+# Credit = author, license and Commons file name, as required by CC BY / CC BY-SA.
+# Some photos show the Chinese-market twin: Seal U DM-i = Song Plus DM-i,
+# EX5 = Galaxy E5, Monjaro = Xingyue L, Tiggo 8 Pro Max shown as Tiggo 8 Plus.
+MODEL_IMAGES = {
+    'byd-seal': (
+        'https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/2022_BYD_Seal.jpg/960px-2022_BYD_Seal.jpg',
+        'User3204, CC BY-SA 4.0, Wikimedia Commons (2022_BYD_Seal.jpg)',
+    ),
+    'byd-seal-u-dm-i': (
+        'https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/2023_BYD_Song_Plus_DM-i_%28front%29.jpg/960px-2023_BYD_Song_Plus_DM-i_%28front%29.jpg',
+        'User3204, CC BY-SA 4.0, Wikimedia Commons (2023_BYD_Song_Plus_DM-i_(front).jpg)',
+    ),
+    'chery-tiggo-7-csh': (
+        'https://upload.wikimedia.org/wikipedia/commons/thumb/7/76/Chery_Tiggo_7_II_014_%28cropped%29.jpg/960px-Chery_Tiggo_7_II_014_%28cropped%29.jpg',
+        'JustAnotherCarDesigner, CC BY-SA 4.0, Wikimedia Commons (Chery_Tiggo_7_II_014_(cropped).jpg)',
+    ),
+    'chery-tiggo-8-pro-max': (
+        'https://upload.wikimedia.org/wikipedia/commons/thumb/3/37/Chery_Tiggo_8_Plus_018_%28cropped%29.jpg/960px-Chery_Tiggo_8_Plus_018_%28cropped%29.jpg',
+        'JustAnotherCarDesigner, CC0, Wikimedia Commons (Chery_Tiggo_8_Plus_018_(cropped).jpg)',
+    ),
+    'geely-ex5': (
+        'https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/Geely_Galaxy_E5_003_%28cropped%29.jpg/960px-Geely_Galaxy_E5_003_%28cropped%29.jpg',
+        'JustAnotherCarDesigner, CC0, Wikimedia Commons (Geely_Galaxy_E5_003_(cropped).jpg)',
+    ),
+    'geely-monjaro': (
+        'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/2021_Geely_Xingyue_L_%28front%29.jpg/960px-2021_Geely_Xingyue_L_%28front%29.jpg',
+        'User3204, CC BY-SA 4.0, Wikimedia Commons (2021_Geely_Xingyue_L_(front).jpg)',
+    ),
+    'hongqi-e-hs9': (
+        'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Hongqi_E-HS9_IMG_0753_%28cropped%29.jpg/960px-Hongqi_E-HS9_IMG_0753_%28cropped%29.jpg',
+        'Alexander-93, CC BY-SA 4.0, Wikimedia Commons (Hongqi_E-HS9_IMG_0753_(cropped).jpg)',
+    ),
+    'hongqi-h5': (
+        'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/Hongqi_H5_2023.jpg/960px-Hongqi_H5_2023.jpg',
+        'Milhouse35, CC BY-SA 4.0, Wikimedia Commons (Hongqi_H5_2023.jpg)',
+    ),
+    'li-auto-l6': (
+        'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/%28CHN-Shanghai%29_Showcar_Li_L6_No-plate_2024-12-11.jpg/960px-%28CHN-Shanghai%29_Showcar_Li_L6_No-plate_2024-12-11.jpg',
+        'S5A-0043, CC BY 4.0, Wikimedia Commons ((CHN-Shanghai)_Showcar_Li_L6_No-plate_2024-12-11.jpg)',
+    ),
+    'li-auto-l7': (
+        'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ed/Li_Auto_L7_008.jpg/960px-Li_Auto_L7_008.jpg',
+        'Quzhouliulian, CC0, Wikimedia Commons (Li_Auto_L7_008.jpg)',
+    ),
+    'nio-es6': (
+        'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/%28CHN-Guangdong%29_Showcar_Nio_ES6_No-plate_2024-05-25.jpg/960px-%28CHN-Guangdong%29_Showcar_Nio_ES6_No-plate_2024-05-25.jpg',
+        'S5A-0043, CC BY 2.0, Wikimedia Commons ((CHN-Guangdong)_Showcar_Nio_ES6_No-plate_2024-05-25.jpg)',
+    ),
+    'nio-et5': (
+        'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/NIO_ET5_IMG_8291.jpg/960px-NIO_ET5_IMG_8291.jpg',
+        'Alexander-93, CC BY-SA 4.0, Wikimedia Commons (NIO_ET5_IMG_8291.jpg)',
+    ),
+    'xiaomi-su7': (
+        'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/%28CHN-Shanghai%29_Private_Xiaomi_SU7_%E6%B2%AAA7WE106_2024-11-24.jpg/960px-%28CHN-Shanghai%29_Private_Xiaomi_SU7_%E6%B2%AAA7WE106_2024-11-24.jpg',
+        'S5A-0043, CC BY 4.0, Wikimedia Commons ((CHN-Shanghai)_Private_Xiaomi_SU7_沪A7WE106_2024-11-24.jpg)',
+    ),
+    'xiaomi-yu7': (
+        'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Xiaomi_YU7_Emerald_Green_Metallic_01.jpg/960px-Xiaomi_YU7_Emerald_Green_Metallic_01.jpg',
+        'Ethan Llamas, CC BY-SA 4.0, Wikimedia Commons (Xiaomi_YU7_Emerald_Green_Metallic_01.jpg)',
+    ),
+    'zeekr-001': (
+        'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/2022_Zeekr_001_%28front%29.jpg/960px-2022_Zeekr_001_%28front%29.jpg',
+        'User3204, CC BY-SA 4.0, Wikimedia Commons (2022_Zeekr_001_(front).jpg)',
+    ),
+    'zeekr-x': (
+        'https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/2023_Zeekr_X_%28front%29.jpg/960px-2023_Zeekr_X_%28front%29.jpg',
+        'User3204, CC BY-SA 4.0, Wikimedia Commons (2023_Zeekr_X_(front).jpg)',
+    ),
+}
+
+# Text logos marked public domain on Wikimedia Commons. Hongqi has no free logo there,
+# so its logo file is shipped with the project in static/img/brands/.
+BRAND_LOGOS = {
+    'byd': (
+        'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/BYD_Auto_2022_logo.svg/250px-BYD_Auto_2022_logo.svg.png',
+        'Логотип BYD Auto 2022 logo.svg, public domain, Wikimedia Commons',
+    ),
+    'chery': (
+        'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b6/Chery_logo.svg/250px-Chery_logo.svg.png',
+        'Логотип Chery logo.svg, public domain, Wikimedia Commons',
+    ),
+    'geely': (
+        'https://upload.wikimedia.org/wikipedia/commons/thumb/b/bc/Geely_Auto_2023.svg/250px-Geely_Auto_2023.svg.png',
+        'Логотип Geely Auto 2023.svg, public domain, Wikimedia Commons',
+    ),
+    'li-auto': (
+        'https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Li_Auto_logo.svg/250px-Li_Auto_logo.svg.png',
+        'Логотип Li Auto logo.svg, public domain, Wikimedia Commons',
+    ),
+    'nio': (
+        'https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/NIO_logo.svg/250px-NIO_logo.svg.png',
+        'Логотип NIO logo.svg, public domain, Wikimedia Commons',
+    ),
+    'xiaomi': (
+        'https://upload.wikimedia.org/wikipedia/commons/thumb/c/cb/Xiaomi_Auto_logo.svg/250px-Xiaomi_Auto_logo.svg.png',
+        'Логотип Xiaomi Auto logo.svg, public domain, Wikimedia Commons',
+    ),
+    'zeekr': (
+        'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Zeekr_logo.svg/250px-Zeekr_logo.svg.png',
+        'Логотип Zeekr logo.svg, public domain, Wikimedia Commons',
+    ),
+    'hongqi': (
+        '/static/img/brands/hongqi.png',
+        'Логотип Hongqi — товарный знак FAW Group, используется для обозначения марки; файл предоставлен автором проекта',
+    ),
+}
+
+
 class Command(BaseCommand):
     help = "Load the idempotent, source-backed course knowledge-base dataset."
 
@@ -183,10 +292,17 @@ class Command(BaseCommand):
                 self._variant(model, generation, drives, china_market, adas, source_key, *variant)
 
         self._content(seeded_models, technologies, adas, sources)
+        self._images()
         self.stdout.write(self.style.SUCCESS(
             f"Course data ready: {Brand.objects.count()} brands, {Model.objects.count()} models, "
             f"{Modification.objects.count()} modifications, {Article.objects.count()} articles."
         ))
+
+    def _images(self):
+        for slug, (url, credit) in MODEL_IMAGES.items():
+            Model.objects.filter(slug=slug).update(image_url=url, image_credit=credit)
+        for slug, (url, credit) in BRAND_LOGOS.items():
+            Brand.objects.filter(slug=slug).update(image_url=url, image_credit=credit)
 
     def _sources(self):
         result = {}

@@ -1,1 +1,1 @@
-{% if brand.image_url %}<img class="entity-logo" src="{{ brand.image_url }}" alt="Логотип {{ brand.name }}" loading="lazy" width="45" height="45">{% else %}<span class="entity-initial" aria-hidden="true">{{ brand.name|slice:':1' }}</span>{% endif %}
+{% if brand.image_url %}<img class="entity-logo" src="{{ brand.image_url }}" alt="Логотип {{ brand.name }}" loading="lazy" height="45">{% else %}<span class="entity-initial" aria-hidden="true">{{ brand.name|slice:':1' }}</span>{% endif %}

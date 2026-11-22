@@ -1,0 +1,33 @@
+<section class="mt-5 pt-4 border-top" id="comments" aria-labelledby="comments-title">
+    <h2 class="h4" id="comments-title">Комментарии ({{ article.visible_comments|length }})</h2>
+    {% for comment in article.visible_comments %}
+        <article class="comment-card" id="comment-{{ comment.pk }}">
+            <div class="d-flex justify-content-between gap-2 flex-wrap small text-secondary">
+                <strong class="text-body">{{ comment.author.username }}</strong>
+                <time datetime="{{ comment.created_at|date:'c' }}">{{ comment.created_at|date:"d.m.Y H:i" }}</time>
+            </div>
+            <p class="mb-1 mt-2">{{ comment.body|linebreaksbr }}</p>
+            {% if comment.author_id == user.id %}
+                <form method="post" action="{% url 'knowledge:comment-delete' article.slug comment.pk %}" class="text-end">{% csrf_token %}
+                    <button class="btn btn-link btn-sm text-secondary p-0" type="submit">Удалить</button>
+                </form>
+            {% endif %}
+        </article>
+    {% empty %}
+        <p class="text-secondary">Комментариев пока нет.</p>
+    {% endfor %}
+
+    {% if user.is_authenticated %}
+        <form class="mt-4" method="post" action="{% url 'knowledge:comment-add' article.slug %}" novalidate>{% csrf_token %}
+            <label class="form-label" for="{{ comment_form.body.id_for_label }}">{{ comment_form.body.label }}</label>
+            {{ comment_form.body }}
+            {% for error in comment_form.body.errors %}<div class="errorlist" role="alert">{{ error }}</div>{% endfor %}
+            <div class="d-flex justify-content-between align-items-center mt-2 gap-2 flex-wrap">
+                <small class="text-secondary">До {{ comment_form.body.field.max_length }} символов. Редактор может скрыть комментарий, нарушающий правила.</small>
+                <button class="btn btn-accent" type="submit">Отправить</button>
+            </div>
+        </form>
+    {% else %}
+        <p class="mt-3"><a href="{% url 'users:login' %}?next={{ request.get_full_path|urlencode }}%23comments">Войдите</a> или <a href="{% url 'users:register' %}">зарегистрируйтесь</a>, чтобы оставить комментарий.</p>
+    {% endif %}
+</section>

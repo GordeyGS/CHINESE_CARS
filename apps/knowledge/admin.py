@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Article, Category, RelatedArticle, Source, Tag, VideoResource
+from .models import Article, ArticleComment, Category, RelatedArticle, Source, Tag, VideoResource
 
 
 @admin.register(Article)
@@ -42,3 +42,24 @@ class VideoResourceAdmin(admin.ModelAdmin):
 
 
 admin.site.register(RelatedArticle)
+
+
+@admin.register(ArticleComment)
+class ArticleCommentAdmin(admin.ModelAdmin):
+    list_display = ("article", "author", "short_body", "is_visible", "created_at")
+    list_filter = ("is_visible", "created_at")
+    search_fields = ("body", "author__username", "article__title")
+    list_editable = ("is_visible",)
+    actions = ("hide_comments", "show_comments")
+
+    @admin.display(description="Текст")
+    def short_body(self, comment):
+        return comment.body[:80]
+
+    @admin.action(description="Скрыть выбранные комментарии")
+    def hide_comments(self, request, queryset):
+        queryset.update(is_visible=False)
+
+    @admin.action(description="Показать выбранные комментарии")
+    def show_comments(self, request, queryset):
+        queryset.update(is_visible=True)

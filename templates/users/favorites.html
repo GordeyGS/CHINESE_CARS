@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Избранное — Китайский автопром{% endblock %}
+{% block content %}
+<header class="page-header"><div class="container"><p class="eyebrow">Личный раздел</p><h1>Избранное</h1><p class="text-secondary mb-0">Сохранённые модели и статьи. Список видите только вы.</p></div></header>
+<div class="container py-5">
+    <section class="mb-5" aria-labelledby="fav-models">
+        <h2 id="fav-models" class="h4 mb-3">Модели ({{ favorite_models|length }})</h2>
+        <div class="row g-4">
+            {% for favorite in favorite_models %}{% with vehicle=favorite.vehicle_model %}
+            <div class="col-md-6 col-xl-4"><div class="card entity-card h-100">
+                <a class="text-reset text-decoration-none" href="{% url 'cars:model-detail' vehicle.slug %}">{% include "includes/model_media.html" %}</a>
+                <div class="card-body"><span class="badge badge-soft">{{ vehicle.brand.name }}</span><h3 class="h5 mt-2"><a class="text-reset text-decoration-none" href="{% url 'cars:model-detail' vehicle.slug %}">{{ vehicle }}</a></h3>
+                {% url 'users:favorite-model' vehicle.slug as favorite_action %}{% include "includes/favorite_button.html" with action=favorite_action is_favorite=True %}</div>
+            </div></div>
+            {% endwith %}{% empty %}
+            <div class="col-12"><div class="empty-state">Пока нет сохранённых моделей. Откройте <a href="{% url 'cars:model-list' %}">каталог</a> и нажмите «В избранное» на странице модели.</div></div>
+            {% endfor %}
+        </div>
+    </section>
+    <section aria-labelledby="fav-articles">
+        <h2 id="fav-articles" class="h4 mb-3">Статьи ({{ favorite_articles|length }})</h2>
+        {% for favorite in favorite_articles %}{% with article=favorite.article %}
+        <div class="article-row"><div><span class="badge badge-soft">{{ article.category.name }}</span><h3 class="h5"><a href="{% url 'knowledge:article-detail' article.slug %}">{{ article.title }}</a></h3><p>{{ article.summary|truncatewords:24 }}</p></div>
+        <div>{% url 'users:favorite-article' article.slug as favorite_action %}{% include "includes/favorite_button.html" with action=favorite_action is_favorite=True %}</div></div>
+        {% endwith %}{% empty %}
+        <div class="empty-state">Пока нет сохранённых статей. Загляните в <a href="{% url 'knowledge:article-list' %}">статьи</a>.</div>
+        {% endfor %}
+    </section>
+</div>
+{% endblock %}

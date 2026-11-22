@@ -134,3 +134,22 @@ class VideoResource(TimeStampedModel):
 
     def __str__(self):
         return self.title
+
+
+class ArticleComment(TimeStampedModel):
+    """Reader comment on a published article; editors hide it instead of editing."""
+
+    MAX_LENGTH = 2000
+
+    article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name="comments")
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="article_comments")
+    body = models.TextField(max_length=MAX_LENGTH)
+    is_visible = models.BooleanField(default=True, db_index=True)
+
+    class Meta:
+        db_table = "article_comment"
+        ordering = ["created_at", "id"]
+        indexes = [models.Index(fields=["article", "is_visible", "created_at"], name="idx_comment_article_visible")]
+
+    def __str__(self):
+        return f"{self.author} → {self.article}: {self.body[:40]}"

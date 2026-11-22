@@ -1,3 +1,50 @@
 {% extends "base.html" %}
-{% block title %}Статьи — Китайский автопром{% endblock %}
-{% block content %}<header class="page-header"><div class="container"><p class="eyebrow">База знаний</p><h1>Статьи</h1><p class="text-secondary mb-0">Проверенные материалы, связанные со структурированными автомобильными сущностями.</p></div></header><div class="container py-5"><p class="text-secondary">Опубликовано статей: {{ page_obj.paginator.count }}</p><div class="row g-4">{% for article in articles %}<div class="col-lg-6"><article class="card h-100 entity-card"><div class="card-body p-4"><div class="d-flex justify-content-between gap-2"><span class="badge badge-soft">{{ article.category.name }}</span><time class="small text-secondary">{{ article.published_at|date:"d.m.Y" }}</time></div><h2 class="h4 mt-3"><a class="text-decoration-none text-reset" href="{% url 'knowledge:article-detail' article.slug %}">{{ article.title }}</a></h2><p>{{ article.summary|truncatewords:35 }}</p><div class="d-flex flex-wrap gap-1">{% for tag in article.tags.all %}<span class="badge text-bg-light">#{{ tag.name }}</span>{% endfor %}</div></div></article></div>{% empty %}<div class="col-12"><div class="empty-state">Опубликованных статей пока нет.</div></div>{% endfor %}</div>{% include "includes/pagination.html" %}</div>{% endblock %}
+{% block title %}{% if active_tag %}#{{ active_tag.name }} — {% elif active_category %}{{ active_category.name }} — {% endif %}Статьи — Китайский автопром{% endblock %}
+{% block content %}
+<header class="page-header"><div class="container"><p class="eyebrow">База знаний</p><h1>Статьи{% if active_category %}: {{ active_category.name }}{% endif %}{% if active_tag %} #{{ active_tag.name }}{% endif %}</h1><p class="text-secondary mb-0">Проверенные материалы, связанные со структурированными автомобильными сущностями.</p></div></header>
+<div class="container py-5">
+    <div class="row g-5">
+        <aside class="col-lg-3 order-lg-2" aria-label="Фильтры статей">
+            <div class="info-card mb-3">
+                <h2 class="h6 text-uppercase text-secondary">Категории</h2>
+                <ul class="list-unstyled mb-0 filter-list">
+                    <li><a {% if not active_category %}class="fw-semibold" aria-current="true"{% endif %} href="{% querystring category=None page=None %}">Все категории</a></li>
+                    {% for category in categories %}
+                        <li><a {% if active_category == category %}class="fw-semibold" aria-current="true"{% endif %} href="{% querystring category=category.slug page=None %}">{{ category.name }}</a> <span class="text-secondary small">{{ category.article_count }}</span></li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="info-card">
+                <h2 class="h6 text-uppercase text-secondary">Теги</h2>
+                <div class="d-flex flex-wrap gap-2">
+                    {% for tag in tags %}
+                        <a class="badge {% if active_tag == tag %}badge-soft border border-success-subtle{% else %}text-bg-light{% endif %} text-decoration-none" href="{% if active_tag == tag %}{% querystring tag=None page=None %}{% else %}{% querystring tag=tag.slug page=None %}{% endif %}" {% if active_tag == tag %}aria-current="true"{% endif %}>#{{ tag.name }} <span class="opacity-75">{{ tag.article_count }}</span></a>
+                    {% empty %}
+                        <span class="text-secondary small">Теги пока не назначены.</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </aside>
+        <div class="col-lg-9 order-lg-1">
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+                <span class="text-secondary">Найдено статей: {{ page_obj.paginator.count }}</span>
+                {% if active_category %}<a class="badge badge-soft text-decoration-none" href="{% querystring category=None page=None %}" aria-label="Убрать фильтр по категории {{ active_category.name }}">{{ active_category.name }} ×</a>{% endif %}
+                {% if active_tag %}<a class="badge badge-soft text-decoration-none" href="{% querystring tag=None page=None %}" aria-label="Убрать фильтр по тегу {{ active_tag.name }}">#{{ active_tag.name }} ×</a>{% endif %}
+            </div>
+            <div class="row g-4">
+                {% for article in articles %}
+                <div class="col-md-6"><article class="card h-100 entity-card"><div class="card-body p-4">
+                    <div class="d-flex justify-content-between gap-2"><a class="badge badge-soft text-decoration-none" href="{% querystring category=article.category.slug page=None %}">{{ article.category.name }}</a><time class="small text-secondary">{{ article.published_at|date:"d.m.Y" }}</time></div>
+                    <h2 class="h4 mt-3"><a class="text-decoration-none text-reset" href="{% url 'knowledge:article-detail' article.slug %}">{{ article.title }}</a></h2>
+                    <p>{{ article.summary|truncatewords:35 }}</p>
+                    <div class="d-flex flex-wrap gap-1">{% for tag in article.tags.all %}<a class="badge text-bg-light text-decoration-none" href="{% querystring tag=tag.slug page=None %}">#{{ tag.name }}</a>{% endfor %}</div>
+                </div></article></div>
+                {% empty %}
+                <div class="col-12"><div class="empty-state">{% if active_tag or active_category %}По выбранному фильтру опубликованных статей нет. <a href="{% url 'knowledge:article-list' %}">Показать все статьи</a>.{% else %}Опубликованных статей пока нет.{% endif %}</div></div>
+                {% endfor %}
+            </div>
+            {% include "includes/pagination.html" %}
+        </div>
+    </div>
+</div>
+{% endblock %}
