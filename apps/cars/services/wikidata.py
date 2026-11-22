@@ -92,6 +92,16 @@ MARKET_TWINS = {
     ("Deepal", "S7"): "S07",
 }
 
+# Items rejected after an editor's review: the automatic rules let them through,
+# but they are not serial passenger models or their Wikipedia article describes
+# another car. Wikidata QID -> reason shown in the import report.
+EXCLUDED_ITEMS = {
+    "Q3100086": "концепт-кар, серийно не выпускался (Geely GE)",
+    "Q137579308": "беспилотное такси Waymo Ojai, не легковая модель для продажи (Zeekr RT)",
+    "Q797228": "статья Википедии описывает другую модель – BYD F6 (BYD F6DM)",
+    "Q105395576": "статья Википедии описывает другую модель – BYD F0 (BYD e1)",
+}
+
 # The knowledge base describes passenger cars; Wikidata's "automobile model"
 # also contains trucks, buses, concepts and prototypes. English entries are whole
 # words, Russian entries are stems ("грузов" covers "грузовик", "грузовой").
@@ -504,6 +514,9 @@ class WikidataImporter:
         planned = []
         seen = set()
         for car in cars:
+            if car.qid in EXCLUDED_ITEMS:
+                report.skipped.append((car.label_en or car.qid, EXCLUDED_ITEMS[car.qid]))
+                continue
             brand_name, model_name = assign_brand(car)
             if brand_name is None:
                 report.skipped.append((car.label_en or car.qid, model_name))

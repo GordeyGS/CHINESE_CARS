@@ -476,3 +476,15 @@ def test_brackets_with_chinese_name_are_removed_from_intro():
     text = "Geely Boyue / Atlas (кит. 吉利博越, пиньинь Jílì Bóyuè) — кроссовер Geely (2016–2023)."
 
     assert strip_chinese_brackets(text) == "Geely Boyue / Atlas — кроссовер Geely (2016–2023)."
+
+
+def test_items_rejected_by_editor_are_skipped_with_reason(demo_data, monkeypatch):
+    monkeypatch.setitem(
+        __import__("apps.cars.services.wikidata", fromlist=["EXCLUDED_ITEMS"]).EXCLUDED_ITEMS,
+        "Q98886444", "проверено редактором: не серийная модель",
+    )
+
+    report = importer().run()
+
+    assert not Model.objects.filter(name="Han").exists()
+    assert ("BYD Han", "проверено редактором: не серийная модель") in report.skipped
