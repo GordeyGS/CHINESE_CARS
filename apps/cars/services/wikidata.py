@@ -12,6 +12,8 @@ Licences: Wikidata statements are CC0. Photos are Wikimedia Commons files under
 their own free licences, so the author and licence are stored in ``image_credit``.
 Descriptions are the introductions of Wikipedia articles (CC BY-SA 4.0): the article
 link and licence are stored in ``description_source_url`` / ``description_credit``.
+When only an English article exists, an editorial Russian translation from
+``data/wikipedia_translations.json`` is used and credited as a translation.
 """
 
 import html
@@ -19,7 +21,8 @@ import json
 import re
 import socket
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
+from pathlib import Path
 from http.client import HTTPException
 from urllib.error import HTTPError, URLError
 from urllib.parse import quote, unquote, urlencode
@@ -34,6 +37,10 @@ from apps.cars.models import Brand, Model
 SPARQL_ENDPOINT = "https://query.wikidata.org/sparql"
 COMMONS_API_ENDPOINT = "https://commons.wikimedia.org/w/api.php"
 ENTITY_URL = "https://www.wikidata.org/wiki/{qid}"
+# Editorial Russian translations of English Wikipedia intros, keyed by Wikidata QID.
+# Used for models that have no Russian Wikipedia article (CC BY-SA allows translations
+# with attribution, so the credit says that the text is a translation).
+TRANSLATIONS_FILE = Path(__file__).resolve().parent.parent / "data" / "wikipedia_translations.json"
 USER_AGENT = "china-auto-kb-course-project/1.0 (educational knowledge base)"
 MAX_RESPONSE_BYTES = 10_000_000
 COMMONS_BATCH_SIZE = 50
@@ -134,6 +141,9 @@ class WikipediaIntro:
     text: str
     url: str
     credit: str
+    title: str = ""
+    # The English intro saved by an earlier import, which a translation may replace.
+    replaces: str = ""
 
 
 @dataclass
@@ -226,11 +236,22 @@ def _strip_html(text):
     return re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", "", text or ""))).strip()
 
 
+# Brackets with the original Chinese or Japanese name and its transcription:
+# «Geely Boyue (кит. 吉利博越, пиньинь Jílì Bóyuè)» -> «Geely Boyue».
+CJK_BRACKETS_RE = re.compile(r"\s*[(（][^()（）]*[\u3040-\u30ff\u4e00-\u9fff][^()（）]*[)）]")
+
+
+def strip_chinese_brackets(text):
+    text = CJK_BRACKETS_RE.sub("", text)
+    return re.sub(r"\s+([,.;:])", r"\1", text).strip()
+
+
 def clean_intro(text):
     """Join the intro into one paragraph and cut it at a sentence end within the limit."""
     text = re.sub(r"\s+", " ", text or "").strip()
     # Wikipedia intros sometimes keep empty brackets left from removed pronunciations.
     text = re.sub(r"\s*\(\s*[,;]?\s*\)", "", text)
+    text = strip_chinese_brackets(text)
     if len(text) <= MAX_DESCRIPTION_CHARS:
         return text if len(text) >= MIN_DESCRIPTION_CHARS else ""
     cut = text[:MAX_DESCRIPTION_CHARS]
@@ -263,6 +284,7 @@ def parse_wikipedia_intros(payload, language, requested_titles):
             text=text,
             url=WIKIPEDIA_ARTICLE_URL.format(language=language, title=quote(title.replace(" ", "_"))),
             credit=f"{name}, статья «{title}», CC BY-SA 4.0"[:200],
+            title=title,
         )
     return {title: by_title[final_title(title)] for title in requested_titles if final_title(title) in by_title}
 
@@ -388,6 +410,27 @@ def _retry_after_seconds(error, attempt):
 # --- Matching rules ------------------------------------------------------------------
 
 
+def load_translations(path=TRANSLATIONS_FILE):
+    try:
+        return json.loads(Path(path).read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        return {}
+
+
+def translate_intros(intros, translations):
+    """Swap English intros for their editorial Russian translations, keeping the source link."""
+    result = dict(intros)
+    for qid, intro in intros.items():
+        if qid in translations and "wikipedia.org" in intro.url and intro.url.startswith("https://en."):
+            result[qid] = replace(
+                intro,
+                text=translations[qid],
+                credit=f"перевод статьи англ. Википедии «{intro.title}», CC BY-SA 4.0"[:200],
+                replaces=intro.text,
+            )
+    return result
+
+
 def owner_qids():
     return {qid for qids, _prefixes in WIKIDATA_BRANDS.values() for qid in qids}
 
@@ -501,7 +544,7 @@ class WikidataImporter:
                 continue
             by_title = self.client.fetch_wikipedia_intros(language, titles.values())
             intros.update({qid: by_title[title] for qid, title in titles.items() if title in by_title})
-        return intros
+        return translate_intros(intros, load_translations())
 
     def _apply(self, planned, images, intros, report, *, publish):
         taken_slugs = set(Model.objects.values_list("slug", flat=True))
@@ -564,7 +607,8 @@ class WikidataImporter:
         """
         changed = []
         short_caption = _useful_description(car.description)
-        if intro and (not model.description or model.description == short_caption):
+        replaceable = {"", short_caption, intro.replaces if intro else ""}
+        if intro and model.description in replaceable and model.description != intro.text:
             model.description = intro.text
             model.description_source_url, model.description_credit = intro.url, intro.credit
             changed += ["description", "description_source_url", "description_credit"]

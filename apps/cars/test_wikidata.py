@@ -416,3 +416,63 @@ def test_persistent_rate_limit_stops_import_safely(demo_data):
 
     assert waits == [2, 4, 8]
     assert Model.objects.count() == count
+
+
+# --- Editorial translations of English intros ------------------------------------------
+
+
+F3_RU = "BYD F3 – компактный седан BYD Auto, выпускавшийся с 2005 по 2021 год."
+
+
+def test_translation_replaces_english_intro_on_create(demo_data, monkeypatch):
+    monkeypatch.setattr("apps.cars.services.wikidata.load_translations", lambda: {"Q797218": F3_RU})
+
+    importer().run()
+
+    f3 = Model.objects.get(name="F3")
+    assert f3.description == F3_RU
+    assert f3.description_credit == "перевод статьи англ. Википедии «BYD F3», CC BY-SA 4.0"
+    assert f3.description_source_url == "https://en.wikipedia.org/wiki/BYD_F3"
+
+
+def test_translation_upgrades_english_text_from_earlier_import(demo_data, monkeypatch):
+    monkeypatch.setattr("apps.cars.services.wikidata.load_translations", lambda: {})
+    importer().run()
+    assert Model.objects.get(name="F3").description == F3_INTRO
+
+    monkeypatch.setattr("apps.cars.services.wikidata.load_translations", lambda: {"Q797218": F3_RU})
+    report = importer().run()
+
+    assert "BYD F3" in report.updated
+    assert Model.objects.get(name="F3").description == F3_RU
+
+
+def test_translation_does_not_touch_russian_intro_or_edited_text(demo_data, monkeypatch):
+    monkeypatch.setattr("apps.cars.services.wikidata.load_translations", lambda: {})
+    importer().run()
+    Model.objects.filter(name="F3").update(description="Текст, исправленный редактором")
+    translations = {"Q797218": F3_RU, "Q98886444": "Не должен применяться к русской статье"}
+    monkeypatch.setattr("apps.cars.services.wikidata.load_translations", lambda: translations)
+
+    importer().run()
+
+    assert Model.objects.get(name="F3").description == "Текст, исправленный редактором"
+    assert Model.objects.get(name="Han").description == HAN_INTRO
+
+
+def test_translations_file_is_valid_and_has_no_chinese_characters():
+    from .services.wikidata import load_translations
+
+    translations = load_translations()
+    assert translations
+    for qid, text in translations.items():
+        assert qid.startswith("Q") and len(text) > 40
+        assert not any("一" <= ch <= "鿿" for ch in text), qid
+
+
+def test_brackets_with_chinese_name_are_removed_from_intro():
+    from .services.wikidata import strip_chinese_brackets
+
+    text = "Geely Boyue / Atlas (кит. 吉利博越, пиньинь Jílì Bóyuè) — кроссовер Geely (2016–2023)."
+
+    assert strip_chinese_brackets(text) == "Geely Boyue / Atlas — кроссовер Geely (2016–2023)."
