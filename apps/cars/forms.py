@@ -10,6 +10,29 @@ class ModificationChoiceField(forms.ModelChoiceField):
         return f"{model.brand.name} / {model.name} / {generation.name} / {modification.name}"
 
 
+def grouped_modification_choices(modifications, empty_label):
+    """Short select options grouped by brand: "Seal · Excellence AWD".
+
+    The generation is added only when a model has several generations in the list,
+    otherwise it is noise ("Актуальное поколение") that makes the option too long.
+    """
+    modifications = list(modifications)
+    generations_by_model = {}
+    for modification in modifications:
+        generation = modification.generation
+        generations_by_model.setdefault(generation.model_id, set()).add(generation.pk)
+
+    groups = {}
+    for modification in modifications:
+        generation = modification.generation
+        model = generation.model
+        label = f"{model.name} · {modification.name}"
+        if len(generations_by_model[model.pk]) > 1:
+            label += f" ({generation.name})"
+        groups.setdefault(model.brand.name, []).append((modification.pk, label))
+    return [("", empty_label), *groups.items()]
+
+
 class ComparisonForm(forms.Form):
     left = ModificationChoiceField(label="Автомобиль 1", queryset=Modification.objects.none())
     right = ModificationChoiceField(label="Автомобиль 2", queryset=Modification.objects.none())
@@ -17,9 +40,10 @@ class ComparisonForm(forms.Form):
     def __init__(self, *args, **kwargs):
         queryset = kwargs.pop("queryset")
         super().__init__(*args, **kwargs)
+        choices = grouped_modification_choices(queryset, "Выберите модификацию")
         for field in self.fields.values():
-            field.queryset = queryset
-            field.empty_label = "Выберите модификацию"
+            field.queryset = queryset  # validation still goes through the queryset
+            field.choices = choices
             field.widget.attrs["class"] = "form-select"
 
     def clean(self):

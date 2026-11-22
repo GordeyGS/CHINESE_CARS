@@ -40,3 +40,12 @@ def test_navigation_links_to_guide_and_sources(client):
 
     assert reverse("core:guide") in content
     assert reverse("knowledge:source-list") in content
+
+
+def test_layout_offers_light_and_dark_themes(client):
+    content = client.get(reverse("core:home")).content.decode()
+
+    assert '<html lang="ru" data-theme="apple">' in content
+    assert "css/theme.css" in content and "css/theme-apple.css" in content
+    assert 'data-theme-choice="apple"' in content and 'data-theme-choice="dark"' in content
+    assert "js/theme.js" in content

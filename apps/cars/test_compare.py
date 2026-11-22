@@ -31,8 +31,8 @@ def test_comparison_rows_have_same_parameters_and_mark_differences(pair):
     assert rows["Марка"]["right"].text == "Zeekr"
     assert rows["Марка"]["different"] is True
     assert rows["Тип"]["different"] is False
-    assert rows["Суммарная мощность"]["left"].text == "230 кВт"
-    assert rows["Суммарная мощность"]["right"].text == "400 кВт"
+    assert rows["Суммарная мощность"]["left"].text == "230 кВт (313 л.с.)"
+    assert rows["Суммарная мощность"]["right"].text == "400 кВт (544 л.с.)"
 
 
 def test_not_applicable_is_distinguished_from_missing(pair):
@@ -79,3 +79,23 @@ def test_compare_rejects_inactive_or_unknown_modification(client, pair):
     assert "right" in inactive.context["form"].errors
     assert "right" in unknown.context["form"].errors
     assert "sections" not in inactive.context
+
+
+def test_compare_with_single_car_preselects_it_without_errors(client, pair):
+    left, _right = pair
+    response = client.get(reverse("cars:compare"), {"left": left.pk})
+
+    assert response.status_code == 200
+    assert response.context["form"].initial["left"] == str(left.pk)
+    assert not response.context["form"].errors
+    assert "Обязательное поле" not in response.content.decode()
+
+
+def test_compare_options_are_short_and_grouped_by_brand(client, pair):
+    left, _right = pair
+    content = client.get(reverse("cars:compare")).content.decode()
+    model = left.generation.model
+
+    assert f'<optgroup label="{model.brand.name}">' in content
+    assert f"{model.name} · {left.name}" in content
+    assert " / " not in content.split("<form", 1)[1].split("</form>", 1)[0]

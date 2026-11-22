@@ -32,13 +32,18 @@ def search_page(request):
     }
     if "q" in request.GET:
         try:
-            response = SearchCoordinator().search(raw_query)
+            # ?exact=1 is the "search instead for ..." link: the query is taken literally.
+            response = SearchCoordinator().search(raw_query, allow_correction=request.GET.get("exact") != "1")
         except QueryValidationError as error:
             context["error"] = str(error)
         else:
             internal = response.internal
             assistance = SearchAssistanceService()
-            show_similar = assistance.is_weak(internal) or not assistance.has_exact_term(raw_query)
+            correction = response.correction
+            searched_query = internal.query.original
+            show_similar = not correction and (
+                assistance.is_weak(internal) or not assistance.has_exact_term(searched_query)
+            )
             external_message = ""
             if response.external.status is ExternalSearchStatus.ERROR:
                 external_message = "Внешний поиск временно недоступен. Внутренние результаты показаны полностью."
@@ -48,6 +53,9 @@ def search_page(request):
                 {
                     "query": internal.query.normalized,
                     "original_query": internal.query.original.strip(),
+                    "typed_query": " ".join(raw_query.split()),
+                    "correction": correction,
+                    "correction_applied": response.correction_applied,
                     "query_type": QUERY_TYPE_LABELS[internal.query.query_type.value],
                     "terms": internal.query.terms,
                     "total": response.total,
@@ -59,9 +67,10 @@ def search_page(request):
                         }
                         for key in GROUP_LABELS
                     ],
+                    "fact_answer": response.fact_answer,
                     "external_results": response.external.results,
                     "external_message": external_message,
-                    "similar_suggestions": assistance.fuzzy(raw_query) if show_similar else [],
+                    "similar_suggestions": assistance.fuzzy(searched_query) if show_similar else [],
                 }
             )
     return render(request, "search/index.html", context)

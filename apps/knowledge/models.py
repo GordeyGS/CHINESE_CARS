@@ -1,3 +1,5 @@
+import re
+
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -117,6 +119,11 @@ class RelatedArticle(TimeStampedModel):
         ]
 
 
+YOUTUBE_ID_RE = re.compile(
+    r"^https?://(?:www\.|m\.)?(?:youtube\.com/(?:watch\?(?:[^#]*&)?v=|embed/|shorts/)|youtu\.be/)([A-Za-z0-9_-]{11})(?![A-Za-z0-9_-])"
+)
+
+
 class VideoResource(TimeStampedModel):
     title = models.CharField(max_length=240)
     description = models.TextField(blank=True)
@@ -134,6 +141,23 @@ class VideoResource(TimeStampedModel):
 
     def __str__(self):
         return self.title
+
+    @property
+    def youtube_id(self):
+        """11-character video ID for watch, short, embed and youtu.be links; None otherwise."""
+        match = YOUTUBE_ID_RE.search(self.url or "")
+        return match.group(1) if match else None
+
+    @property
+    def embed_url(self):
+        # The privacy-enhanced domain sets no cookies until the visitor presses play.
+        return f"https://www.youtube-nocookie.com/embed/{self.youtube_id}?autoplay=1&rel=0" if self.youtube_id else ""
+
+    @property
+    def preview_url(self):
+        if self.thumbnail_url:
+            return self.thumbnail_url
+        return f"https://i.ytimg.com/vi/{self.youtube_id}/hqdefault.jpg" if self.youtube_id else ""
 
 
 class ArticleComment(TimeStampedModel):

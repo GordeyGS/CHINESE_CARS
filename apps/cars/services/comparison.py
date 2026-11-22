@@ -5,6 +5,7 @@ from django.db.models import Prefetch
 from django.template.defaultfilters import floatformat
 
 from ..models import Modification, Powertrain, TrimLevel
+from ..units import format_power
 
 
 @dataclass(frozen=True)
@@ -59,6 +60,10 @@ def _value(value, suffix=""):
     return ComparisonValue(f"{_number(value)}{suffix}")
 
 
+def _power_value(power_kw):
+    return NOT_AVAILABLE if power_kw is None else ComparisonValue(format_power(power_kw))
+
+
 def _combustion_engine_value(modification):
     powertrain = modification.powertrain
     engine = powertrain.combustion_engine
@@ -70,7 +75,7 @@ def _combustion_engine_value(modification):
     if engine.displacement_cc:
         details.append(f"{engine.displacement_cc} см³")
     if engine.power_kw is not None:
-        details.append(f"{_number(engine.power_kw)} кВт")
+        details.append(format_power(engine.power_kw))
     return ComparisonValue(" · ".join(details))
 
 
@@ -84,7 +89,7 @@ def _motors_value(modification):
         if link.quantity > 1:
             details.append(f"× {link.quantity}")
         if link.electric_motor.power_kw is not None:
-            details.append(f"{_number(link.electric_motor.power_kw)} кВт")
+            details.append(format_power(link.electric_motor.power_kw))
         motors.append(" · ".join(details))
     return ComparisonValue("\n".join(motors)) if motors else NOT_AVAILABLE
 
@@ -168,7 +173,7 @@ def build_comparison(left, right):
                 row("Трансмиссия", lambda item: _value(item.powertrain.transmission.name if item.powertrain.transmission else None)),
                 row("Двигатель внутреннего сгорания", _combustion_engine_value),
                 row("Электродвигатели", _motors_value),
-                row("Суммарная мощность", lambda item: _value(item.powertrain.system_power_kw, " кВт")),
+                row("Суммарная мощность", lambda item: _power_value(item.powertrain.system_power_kw)),
                 row("Суммарный крутящий момент", lambda item: _value(item.powertrain.system_torque_nm, " Н·м")),
             ],
         },

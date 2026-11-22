@@ -31,6 +31,42 @@
                 {% if show_scores and terms %}<p class="debug">Значимые термины: {{ terms|join:", " }}</p>{% endif %}
             </section>
 
+            {% if correction %}
+                <section class="query-correction" aria-label="Исправление запроса">
+                    {% if correction_applied %}
+                        <p class="mb-1">Показаны результаты по запросу <strong>{{ correction.corrected }}</strong></p>
+                        <p class="mb-1 small">Искать вместо этого: <a href="{% url 'search:index' %}?q={{ typed_query|urlencode }}&amp;exact=1">{{ typed_query }}</a></p>
+                    {% else %}
+                        <p class="mb-1">Возможно, вы имели в виду: <a href="{% url 'search:index' %}?q={{ correction.corrected|urlencode }}"><strong>{{ correction.corrected }}</strong></a></p>
+                    {% endif %}
+                    <p class="mb-0 small text-secondary">Исправлено: {{ correction.explanation }}</p>
+                </section>
+            {% endif %}
+
+            {% if fact_answer %}
+                <section class="fact-answer" aria-labelledby="fact-answer-title">
+                    <p class="fact-answer-eyebrow">Ответ из базы знаний</p>
+                    <h2 class="h4" id="fact-answer-title">{{ fact_answer.title }}</h2>
+                    {% if fact_answer.items %}
+                        <ol class="fact-answer-list">
+                            {% for item in fact_answer.items %}
+                                {% with vehicle=item.modification.generation.model %}
+                                <li>
+                                    <a href="{% url 'cars:modification-detail' item.modification.slug %}">{{ vehicle }} {{ item.modification.name }}</a>
+                                    <small>{{ item.modification.powertrain.type }} · {{ item.modification.powertrain.drive_type.code }}</small>
+                                    <strong>{{ item.value_display }}</strong>
+                                </li>
+                                {% endwith %}
+                            {% endfor %}
+                        </ol>
+                        {% if fact_answer.items|length > 1 %}<a class="btn btn-sm btn-outline-secondary" href="{% url 'cars:compare' %}?left={{ fact_answer.items.0.modification.id }}&amp;right={{ fact_answer.items.1.modification.id }}">Сравнить первые два</a>{% endif %}
+                    {% else %}
+                        <p class="mb-0">В базе нет модификаций с заполненным значением этого параметра для заданных условий.</p>
+                    {% endif %}
+                    <p class="fact-answer-note">{{ fact_answer.explanation }}</p>
+                </section>
+            {% endif %}
+
             {% if similar_suggestions %}
                 <section class="search-help" aria-labelledby="similar-title">
                     <h2 class="h5" id="similar-title">Возможно, вы имели в виду</h2>

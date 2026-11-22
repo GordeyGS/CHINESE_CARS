@@ -133,12 +133,20 @@ class Model(SourcedModel):
         UPCOMING = "upcoming", "Upcoming"
         IN_PRODUCTION = "production", "In production"
         DISCONTINUED = "discontinued", "Discontinued"
+        # Imported models whose production period is not stated in the source.
+        UNKNOWN = "unknown", "Unknown"
 
     brand = models.ForeignKey(Brand, on_delete=models.PROTECT, related_name="models")
     name = models.CharField(max_length=160)
     slug = models.SlugField(max_length=200, unique=True)
     segment = models.CharField(max_length=80, blank=True)
     description = models.TextField(blank=True)
+    # Filled when the description is quoted from a source with an attribution licence
+    # (Wikipedia, CC BY-SA): the page must name the source, like image_credit for photos.
+    description_source_url = models.URLField(max_length=500, blank=True)
+    description_credit = models.CharField(
+        max_length=200, blank=True, help_text="Источник и лицензия текста описания, например «Википедия, CC BY-SA 4.0»."
+    )
     production_status = models.CharField(
         max_length=20, choices=ProductionStatus.choices, default=ProductionStatus.IN_PRODUCTION, db_index=True
     )
@@ -163,6 +171,7 @@ class Model(SourcedModel):
             self.ProductionStatus.UPCOMING: "Ожидается",
             self.ProductionStatus.IN_PRODUCTION: "В производстве",
             self.ProductionStatus.DISCONTINUED: "Производство завершено",
+            self.ProductionStatus.UNKNOWN: "Нет данных",
         }
         return labels.get(self.production_status, self.production_status)
 

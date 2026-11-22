@@ -78,3 +78,17 @@ def test_article_list_is_paginated(client, monkeypatch):
 
     assert response.context["page_obj"].paginator.num_pages == Article.objects.filter(status="published").count()
     assert "?page=2" in response.content.decode()
+
+
+def test_youtube_video_card_is_click_to_play(client):
+    video = VideoResource.objects.get(url="https://example.com/videos/chinese-ev-demo")
+    video.url = "https://www.youtube.com/watch?v=N1f76YiT3v4"
+    video.save(update_fields=["url"])
+
+    content = client.get(reverse("knowledge:article-detail", args=["blade-battery-overview"])).content.decode()
+
+    assert 'data-video-embed="https://www.youtube-nocookie.com/embed/N1f76YiT3v4?autoplay=1&amp;rel=0"' in content
+    assert "https://i.ytimg.com/vi/N1f76YiT3v4/hqdefault.jpg" in content
+    assert 'href="https://www.youtube.com/watch?v=N1f76YiT3v4"' in content
+    assert "<iframe" not in content
+    assert "js/video-embed.js" in content

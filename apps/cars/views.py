@@ -28,8 +28,14 @@ BRANDS_PER_PAGE = 24
 
 def compare(request):
     modifications = comparison_queryset()
-    is_submitted = "left" in request.GET or "right" in request.GET
-    form = ComparisonForm(request.GET if is_submitted else None, queryset=modifications)
+    # The form is validated only when both cars are chosen. A link with a single car
+    # (the "Добавить к сравнению" button) just preselects it without showing errors.
+    is_submitted = "left" in request.GET and "right" in request.GET
+    if is_submitted:
+        form = ComparisonForm(request.GET, queryset=modifications)
+    else:
+        initial = {name: request.GET.get(name) for name in ("left", "right") if request.GET.get(name)}
+        form = ComparisonForm(initial=initial, queryset=modifications)
     context = {"form": form}
     if is_submitted and form.is_valid():
         left = form.cleaned_data["left"]

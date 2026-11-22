@@ -18,6 +18,8 @@
 
 Для основных редактируемых предметных сущностей предусматриваются необязательные поля `source_url` и `source_note`. Статьи используют отдельный реестр `source`; привязка отдельных структурированных фактов к нескольким источникам отложена до появления такого требования.
 
+Импорт из Wikidata схему не меняет: у импортированной модели `source_url` содержит ссылку на элемент Wikidata (`https://www.wikidata.org/wiki/Q…`) и служит ключом повторного сопоставления, `source_note` отмечает происхождение, `is_active=False` — статус черновика. Отдельное поле `wikidata_id` не добавлено, потому что существующих полей достаточно. Миграция `0007_model_description_credit` добавила к `vehicle_model` поля `description_source_url` и `description_credit` по образцу `image_url`/`image_credit`. Описания из Википедии распространяются по CC BY-SA 4.0, и источник обязан быть показан на странице; `source_url`/`source_note` для этого не подходят, потому что описывают происхождение всей записи (элемент Wikidata или сайт производителя), а не только текста. Миграция `0006_production_status_unknown` добавила к `production_status` значение `unknown` («Нет данных»): без него импорт был бы вынужден записывать неподтверждённое «в производстве» (по умолчанию). Структура таблицы не изменилась, расширен только список допустимых значений.
+
 ## 2. Основные таблицы
 
 ### Организации и автомобили
@@ -27,7 +29,7 @@
 | `country` | `name`, `iso_code` | уникальные `name`, `iso_code` |
 | `manufacturer` | `name`, `slug`, `country_id`, `founded_year`, `description`, `is_active` | N:1 к стране |
 | `brand` | `manufacturer_id`, `origin_country_id`, `name`, `slug`, `founded_year`, `discontinued_year`, `description`, `image_url`, `image_credit`, `is_active` | N:1 к производителю и стране; уникально `(manufacturer_id, name)` |
-| `vehicle_model` | `brand_id`, `name`, `slug`, `segment`, `description`, `production_status`, `image_url`, `image_credit`, `is_active` | N:1 к марке; уникально `(brand_id, name)` |
+| `vehicle_model` | `brand_id`, `name`, `slug`, `segment`, `description`, `description_source_url`, `description_credit`, `production_status`, `image_url`, `image_credit`, `is_active` | N:1 к марке; уникально `(brand_id, name)` |
 | `platform` | `manufacturer_id`, `name`, `slug`, `description`, `is_active` | платформа может использоваться несколькими поколениями |
 | `body_type` | `code`, `name` | небольшой справочник |
 | `generation` | `model_id`, `platform_id`, `body_type_id`, `name`, `code`, `start_year`, `end_year`, `description`, `is_active` | проверка `end_year >= start_year`; уникальность имени в модели |

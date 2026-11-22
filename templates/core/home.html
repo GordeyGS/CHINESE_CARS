@@ -1,34 +1,99 @@
 {% extends "base.html" %}
 {% block title %}База знаний по китайскому автопрому{% endblock %}
 {% block content %}
-<section class="hero-section">
-    <div class="container py-5 py-lg-6">
-        <div class="row align-items-center g-4">
-            <div class="col-lg-7">
-                <p class="eyebrow">Учебная информационная система</p>
-                <h1 class="display-4 fw-bold">База знаний по китайскому автопрому</h1>
-                <p class="lead text-secondary">Структурированные сведения о производителях, марках, моделях, поколениях, модификациях и технологиях — вместе со статьями и видео.</p>
-                <form class="hero-search" action="{% url 'search:index' %}" method="get" role="search">
+<section class="hero-premium" aria-labelledby="hero-title">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6">
+                <span class="hero-pill"><span class="dot" aria-hidden="true"></span>База знаний · {{ stats.brands }} марок Китая</span>
+                <h1 class="hero-title" id="hero-title">Китайский автопром&nbsp;— <span class="gradient-text">в одной базе знаний</span></h1>
+                <p class="hero-lead">Производители, модели, модификации и технологии, связанные между собой. Ищите, сравнивайте и получайте объяснимый подбор автомобиля.</p>
+                <form class="hero-search-box position-relative" action="{% url 'search:index' %}" method="get" role="search">
                     <label class="visually-hidden" for="hero-query">Поиск по базе знаний</label>
-                    <input class="form-control form-control-lg" id="hero-query" name="q" type="search" placeholder="Например: какие модели используют Blade Battery?" maxlength="300" required data-search-autocomplete data-suggest-url="{% url 'search:suggest' %}" autocomplete="off" aria-autocomplete="list" aria-expanded="false">
-                    <button class="btn btn-accent btn-lg" type="submit">Искать</button>
+                    <input id="hero-query" name="q" type="search" placeholder="Например: какие модели используют Blade Battery?" maxlength="300" required data-search-autocomplete data-suggest-url="{% url 'search:suggest' %}" autocomplete="off" aria-autocomplete="list" aria-expanded="false">
+                    <button class="btn btn-accent px-4" type="submit">Искать</button>
                 </form>
-                <p class="small text-secondary mt-3 mb-0">Впервые здесь? Начните с раздела <a href="{% url 'core:guide' %}">«Общие сведения»</a> — термины ICE, BEV, PHEV, EREV и ориентиры при выборе. Все материалы опираются на <a href="{% url 'knowledge:source-list' %}">реестр источников</a>.</p>
-            </div>
-            <div class="col-lg-5">
-                <div class="knowledge-map">
-                    <span>Производитель</span><i>→</i><span>Марка</span><i>→</i><span>Модель</span><i>→</i><span>Поколение</span><i>→</i><span>Модификация</span>
+                <div class="hero-chips">
+                    <span>Попробуйте:</span>
+                    {% for query in home_queries %}<a href="{% url 'search:index' %}?q={{ query|urlencode }}">{{ query|truncatechars:28 }}</a>{% endfor %}
                 </div>
+                <dl class="hero-stats mb-0">
+                    <div><dt class="visually-hidden">Марок</dt><dd class="mb-0"><strong>{{ stats.brands }}</strong><span>марок</span></dd></div>
+                    <div><dt class="visually-hidden">Моделей</dt><dd class="mb-0"><strong>{{ stats.models }}</strong><span>моделей</span></dd></div>
+                    <div><dt class="visually-hidden">Модификаций</dt><dd class="mb-0"><strong>{{ stats.modifications }}</strong><span>модификаций</span></dd></div>
+                    <div><dt class="visually-hidden">Статей</dt><dd class="mb-0"><strong>{{ stats.articles }}</strong><span>статей</span></dd></div>
+                </dl>
+            </div>
+            <div class="col-lg-6">
+                {% if hero_model %}
+                <div class="hero-visual">
+                    <figure class="hero-photo">
+                        <img src="{{ hero_model.image_url }}" alt="{{ hero_model }}" width="960" height="720" fetchpriority="high">
+                        {% if hero_model.image_credit %}<figcaption>Фото: {{ hero_model.image_credit|truncatechars:70 }}</figcaption>{% endif %}
+                    </figure>
+                    <div class="hero-float">
+                        <small>{{ hero_model.brand.name }}</small>
+                        <strong>{{ hero_model }}</strong>
+                        {% if hero_specs %}<div class="specs">{% for spec in hero_specs %}<span>{{ spec }}</span>{% endfor %}</div>{% endif %}
+                        <a href="{% url 'cars:model-detail' hero_model.slug %}">Смотреть модель →</a>
+                    </div>
+                </div>
+                {% else %}
+                <div class="knowledge-map"><span>Производитель</span><i>→</i><span>Марка</span><i>→</i><span>Модель</span><i>→</i><span>Поколение</span><i>→</i><span>Модификация</span></div>
+                {% endif %}
             </div>
         </div>
     </div>
 </section>
+
+<section class="container py-5" aria-labelledby="brands-title">
+    <div class="section-heading"><div><p class="eyebrow">Каталог</p><h2 id="brands-title">Марки</h2></div><a href="{% url 'cars:brand-list' %}">Все марки →</a></div>
+    <div class="brand-strip">
+        {% for brand in brands %}
+            <a class="brand-tile" href="{% url 'cars:brand-detail' brand.slug %}">{% include "includes/brand_logo.html" %}<strong>{{ brand.name }}</strong><small>Моделей: {{ brand.model_count }}</small></a>
+        {% empty %}
+            <p>Марки пока не добавлены.</p>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="container pb-5" aria-labelledby="models-title">
+    <div class="section-heading"><div><p class="eyebrow">Автомобили</p><h2 id="models-title">Модели в базе</h2></div><a href="{% url 'cars:model-list' %}">Открыть каталог →</a></div>
+    <div class="row g-4">
+        {% for vehicle in popular_models %}
+        <div class="col-sm-6 col-lg-3">
+            <a class="entity-card card h-100 model-card" href="{% url 'cars:model-detail' vehicle.slug %}">
+                {% include "includes/model_media.html" %}
+                <div class="card-body"><span class="badge badge-soft">{{ vehicle.brand.name }}</span><h3>{{ vehicle }}</h3><p>{{ vehicle.segment|default:"Модель" }}{% if vehicle.production_status == 'production' %} · в производстве{% endif %}</p></div>
+            </a>
+        </div>
+        {% empty %}
+        <p>Модели пока не добавлены.</p>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="feature-band py-5" aria-labelledby="features-title">
+    <div class="container">
+        <div class="section-heading"><div><p class="eyebrow">Возможности</p><h2 id="features-title">Больше, чем каталог</h2></div><a href="{% url 'core:guide' %}">Как пользоваться →</a></div>
+        <div class="row g-4">
+            <div class="col-md-4"><a class="feature-card" href="{% url 'search:index' %}">
+                <span class="feature-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span>
+                <h3 class="h5">Умный поиск</h3><p>Слово, фраза или целый вопрос. Полнотекстовый поиск PostgreSQL, исправление опечаток и подсказки.</p><span class="more">Найти →</span></a></div>
+            <div class="col-md-4"><a class="feature-card" href="{% url 'cars:compare' %}">
+                <span class="feature-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M8 3v18M16 3v18M3 8h5M16 16h5M3 16h5M16 8h5"/></svg></span>
+                <h3 class="h5">Сравнение</h3><p>Две модификации бок о бок: мощность, батарея, запас хода, цены по рынкам и различия.</p><span class="more">Сравнить →</span></a></div>
+            <div class="col-md-4"><a class="feature-card" href="{% url 'recommendations:index' %}">
+                <span class="feature-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"/></svg></span>
+                <h3 class="h5">Объяснимый подбор</h3><p>Укажите кузов, тип установки, привод и бюджет — система объяснит, почему предложен каждый вариант.</p><span class="more">Подобрать →</span></a></div>
+        </div>
+    </div>
+</section>
+
 <div class="container py-5">
-    <section class="mb-5"><div class="section-heading"><div><p class="eyebrow">Каталог</p><h2>Популярные марки</h2></div><a href="{% url 'cars:brand-list' %}">Все марки →</a></div><div class="row g-3">{% for brand in popular_brands %}<div class="col-sm-6 col-lg-3"><a class="entity-card card h-100" href="{% url 'cars:brand-detail' brand.slug %}"><div class="card-body">{% include "includes/brand_logo.html" %}<h3 class="h5 mt-3">{{ brand.name }}</h3><p>{{ brand.manufacturer.name }}</p><small>Моделей: {{ brand.model_count }}</small></div></a></div>{% empty %}<p>Марки пока не добавлены.</p>{% endfor %}</div></section>
-    <section class="mb-5"><div class="section-heading"><div><p class="eyebrow">Автомобили</p><h2>Модели в базе</h2></div><a href="{% url 'cars:model-list' %}">Открыть каталог →</a></div><div class="row g-3">{% for vehicle in popular_models %}<div class="col-md-6 col-lg-3"><a class="entity-card card h-100" href="{% url 'cars:model-detail' vehicle.slug %}">{% include "includes/model_media.html" %}<div class="card-body"><span class="badge text-bg-light">{{ vehicle.brand.name }}</span><h3 class="h5 mt-3">{{ vehicle }}</h3><p>{{ vehicle.description|truncatewords:18|default:"Описание готовится" }}</p></div></a></div>{% empty %}<p>Модели пока не добавлены.</p>{% endfor %}</div></section>
     <div class="row g-5">
-        <section class="col-lg-7"><div class="section-heading"><div><p class="eyebrow">Материалы</p><h2>Новые статьи</h2></div><a href="{% url 'knowledge:article-list' %}">Все статьи →</a></div>{% for article in articles %}<article class="article-row"><div><span class="badge badge-soft">{{ article.category.name }}</span><h3 class="h5"><a href="{% url 'knowledge:article-detail' article.slug %}">{{ article.title }}</a></h3><p>{{ article.summary|truncatewords:24 }}</p></div><time>{{ article.published_at|date:"d.m.Y" }}</time></article>{% empty %}<p>Опубликованных статей пока нет.</p>{% endfor %}</section>
-        <section class="col-lg-5"><div class="section-heading"><div><p class="eyebrow">Справочник</p><h2>Технологии</h2></div><a href="{% url 'cars:technology-list' %}">Все →</a></div><div class="list-group shadow-sm">{% for technology in technologies %}<a class="list-group-item list-group-item-action p-3" href="{% url 'cars:technology-detail' technology.slug %}"><strong>{{ technology.name }}</strong><br><small class="text-secondary">{{ technology.category|default:"Технология" }}</small></a>{% empty %}<div class="list-group-item">Технологии пока не добавлены.</div>{% endfor %}</div></section>
+        <section class="col-lg-7" aria-labelledby="articles-title"><div class="section-heading"><div><p class="eyebrow">Материалы</p><h2 id="articles-title">Новые статьи</h2></div><a href="{% url 'knowledge:article-list' %}">Все статьи →</a></div>{% for article in articles %}<article class="article-row"><div><span class="badge badge-soft">{{ article.category.name }}</span><h3 class="h5"><a href="{% url 'knowledge:article-detail' article.slug %}">{{ article.title }}</a></h3><p>{{ article.summary|truncatewords:24 }}</p></div><time>{{ article.published_at|date:"d.m.Y" }}</time></article>{% empty %}<p>Опубликованных статей пока нет.</p>{% endfor %}</section>
+        <section class="col-lg-5" aria-labelledby="tech-title"><div class="section-heading"><div><p class="eyebrow">Справочник</p><h2 id="tech-title">Технологии</h2></div><a href="{% url 'cars:technology-list' %}">Все →</a></div><div class="list-group shadow-sm rounded-4 overflow-hidden">{% for technology in technologies %}<a class="list-group-item list-group-item-action p-3 d-flex justify-content-between align-items-center" href="{% url 'cars:technology-detail' technology.slug %}"><span><strong>{{ technology.name }}</strong><br><small class="text-secondary">{{ technology.category|default:"Технология" }}</small></span><span aria-hidden="true">→</span></a>{% empty %}<div class="list-group-item">Технологии пока не добавлены.</div>{% endfor %}</div></section>
     </div>
 </div>
 {% endblock %}

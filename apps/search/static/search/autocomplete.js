@@ -1,5 +1,12 @@
 (() => {
     const debounceDelay = 250;
+    const typeLabels = {
+        brand: "марка",
+        model: "модель",
+        technology: "технология",
+        article: "статья",
+        correction: "исправление",
+    };
 
     document.querySelectorAll("[data-search-autocomplete]").forEach((input, inputIndex) => {
         const form = input.closest("form");
@@ -56,7 +63,7 @@
                 option.id = `${listId}-option-${index}`;
                 option.className = "list-group-item list-group-item-action autocomplete-option";
                 option.setAttribute("role", "option");
-                option.innerHTML = `<span>${escapeText(item.label)}</span><small>${escapeText(item.type)}</small>`;
+                option.innerHTML = `<span>${escapeText(item.label)}</span><small>${escapeText(typeLabels[item.type] || item.type)}</small>`;
                 option.addEventListener("mousedown", (event) => event.preventDefault());
                 option.addEventListener("click", () => select(index));
                 list.appendChild(option);

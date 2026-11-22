@@ -51,3 +51,27 @@ def test_published_article_requires_date():
     )
     with pytest.raises(ValidationError):
         article.full_clean()
+
+
+@pytest.mark.parametrize(
+    ("url", "expected"),
+    [
+        ("https://www.youtube.com/watch?v=N1f76YiT3v4", "N1f76YiT3v4"),
+        ("https://www.youtube.com/watch?feature=share&v=jUs6cQkl4Ug", "jUs6cQkl4Ug"),
+        ("https://youtu.be/vTSGPLqvcvc", "vTSGPLqvcvc"),
+        ("https://www.youtube.com/shorts/OJJYhO0_4PI", "OJJYhO0_4PI"),
+        ("https://www.youtube.com/embed/xg2x21o5u0A", "xg2x21o5u0A"),
+        ("https://www.youtube.com/@xiaomi", None),
+        ("https://www.nio.com/videos", None),
+        ("https://evil.example/watch?v=N1f76YiT3v4", None),
+    ],
+)
+def test_video_youtube_id_is_parsed_only_from_youtube_links(url, expected):
+    video = VideoResource(title="t", url=url, provider="p")
+
+    assert video.youtube_id == expected
+    if expected:
+        assert video.embed_url.startswith(f"https://www.youtube-nocookie.com/embed/{expected}")
+        assert video.preview_url == f"https://i.ytimg.com/vi/{expected}/hqdefault.jpg"
+    else:
+        assert video.embed_url == "" and video.preview_url == ""

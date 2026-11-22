@@ -38,10 +38,42 @@ class SearchAssistanceService:
         self.limit = min(max(limit, 1), SUGGESTION_LIMIT)
 
     def autocomplete(self, raw_query):
+        """Suggestions while typing, like a search engine:
+
+        1. names that start with the typed text (brand, "brand model", model alone, ...);
+        2. if there are too few: the corrected query itself ("зикр" -> "Zeekr") and names
+           starting with the text in the other keyboard layout ("яуу" -> "zee") or with the
+           corrected spelling;
+        3. if there is still nothing: names similar by trigrams (typo in the middle).
+        """
         query = " ".join((raw_query or "").split())
         if len(query) < MIN_SUGGESTION_LENGTH or len(query) > MAX_SUGGESTION_QUERY_LENGTH:
             return []
 
+        suggestions = self._prefix_suggestions(query)
+        if len(suggestions) < self.limit:
+            from .correction import QueryCorrector
+
+            corrector = QueryCorrector()
+            alternatives = [corrector.complete_prefix(query)]
+            correction = corrector.correct(query)
+            alternatives.append(correction.corrected if correction else None)
+            if correction:
+                # Like a search engine: the corrected query itself comes first.
+                fixed = SearchSuggestion(correction.corrected, "correction", correction.corrected)
+                suggestions = self._merge([fixed], suggestions)
+            for alternative in alternatives:
+                if alternative and alternative.casefold() != query.casefold():
+                    suggestions = self._merge(suggestions, self._prefix_suggestions(alternative))
+        if not suggestions and len(query) >= 3:
+            suggestions = self.fuzzy(query, limit=self.limit)
+        return suggestions[: self.limit]
+
+    def _merge(self, first, second):
+        seen = {item.label.casefold() for item in first}
+        return first + [item for item in second if item.label.casefold() not in seen]
+
+    def _prefix_suggestions(self, query):
         suggestions = []
         sources = (
             (
@@ -52,6 +84,13 @@ class SearchAssistanceService:
                 VehicleModel.objects.filter(is_active=True)
                 .annotate(label=Concat("brand__name", Value(" "), "name"))
                 .filter(label__istartswith=query)
+                .values_list("label", flat=True),
+                "model",
+            ),
+            (
+                # "seal" finds "BYD Seal": the model name typed without the brand.
+                VehicleModel.objects.filter(is_active=True, name__istartswith=query)
+                .annotate(label=Concat("brand__name", Value(" "), "name"))
                 .values_list("label", flat=True),
                 "model",
             ),
