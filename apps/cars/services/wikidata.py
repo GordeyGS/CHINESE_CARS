@@ -570,6 +570,9 @@ class WikidataImporter:
                 changed = self._fill_empty_fields(existing, car, image, intro)
                 (report.updated if changed else report.unchanged).append(title)
                 continue
+            if Model.objects.filter(brand=brand, name__iexact=model_name[:160]).exists():
+                report.skipped.append((title, "название занято моделью из другого элемента Wikidata"))
+                continue
 
             Model.objects.create(
                 brand=brand,
@@ -607,6 +610,10 @@ class WikidataImporter:
             if car.label_ru.lower().startswith(prefix.lower() + " "):
                 names.add(car.label_ru[len(prefix):].strip().lower())
         for candidate in brand.models.all():
+            # A model imported from another Wikidata item is a different car, even if a
+            # Russian label coincides («Geely GE» is both a concept car and Borui GE).
+            if candidate.source_url.startswith(ENTITY_URL.format(qid="")) and candidate.source_url != car.url:
+                continue
             if candidate.name.lower() in names:
                 return candidate
         return None

@@ -488,3 +488,15 @@ def test_items_rejected_by_editor_are_skipped_with_reason(demo_data, monkeypatch
 
     assert not Model.objects.filter(name="Han").exists()
     assert ("BYD Han", "проверено редактором: не серийная модель") in report.skipped
+
+
+def test_name_match_ignores_model_imported_from_another_item(demo_data):
+    byd = Brand.objects.get(name="BYD")
+    Model.objects.create(brand=byd, name="Han", slug="byd-han-old",
+                         source_url="https://www.wikidata.org/wiki/Q1", is_active=False)
+    sparql = {"results": {"bindings": [sparql_row("Q98886444", "BYD Han", brand="Q27423")]}}
+
+    report = importer(FakeOpener(sparql=sparql)).run(with_images=False, with_descriptions=False)
+
+    assert report.created == []  # unique (brand, name) forbids a second "Han" ...
+    assert ("BYD Han", "название занято моделью из другого элемента Wikidata") in report.skipped
